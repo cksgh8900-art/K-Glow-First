@@ -1,0 +1,6 @@
+{
+  "name": "K-Glow Landing Page",
+  "description": "K-beauty 브랜드의 글로벌 시장(인도, 미국) 진출을 지원하는 글로벌 액셀러레이터 K-Glow의 공식 랜딩 페이지입니다.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
