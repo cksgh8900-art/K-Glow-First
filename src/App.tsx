@@ -76,6 +76,57 @@ const INITIAL_INQUIRIES: Inquiry[] = [
 ];
 
 export default function App() {
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    // [중요] 아까 복사한 회사 계정의 웹 앱 URL을 여기에 넣으세요
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxs9J4uJca2d8GymyYnAQsh94DOE6q8e9_8emYyRxf-vVQQVrKuXRERuNPKSmP-GaPVlg/exec';
+    
+    const form = e.target;
+    const btn = form.querySelector('button[type="submit"]');
+    
+    // 버튼 중복 클릭 방지
+    btn.disabled = true;
+    btn.innerText = "제출 중...";
+
+    // 체크박스(타켓 마켓) 데이터 처리를 위한 로직
+    const formData = new FormData(form);
+    const targetMarkets = [];
+    form.querySelectorAll('input[name="targetMarkets"]:checked').forEach((checkbox) => {
+      targetMarkets.push(checkbox.value);
+    });
+
+    const data = {
+      company: formData.get('company'),
+      brand: formData.get('brand'),
+      applicant: formData.get('applicant'),
+      phone: formData.get('phone'),
+      email: formData.get('email'),
+      website: formData.get('website'),
+      targetMarkets: targetMarkets, // 배열로 전달
+      category: formData.get('category'),
+      message: formData.get('message')
+    };
+
+    fetch(scriptURL, {
+      method: 'POST',
+      mode: 'no-cors', // 구글 앱스 스크립트와 통신할 때 필수 설정
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    .then(() => {
+      alert('성공적으로 접수되었습니다. 담당자가 곧 연락드리겠습니다.');
+      form.reset();
+      btn.disabled = false;
+      btn.innerText = "K-Glow 가속 솔루션 승인 문의 제출";
+    })
+    .catch(error => {
+      console.error('Error!', error.message);
+      alert('오류가 발생했습니다. 다시 시도해주세요.');
+      btn.disabled = false;
+      btn.innerText = "K-Glow 가속 솔루션 승인 문의 제출";
+    });
+  };
   // Navigation active state for style highlights
   const [activeSection, setActiveSection] = useState('hero');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -113,6 +164,7 @@ export default function App() {
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [formSubmitted, setFormSubmitted] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
   // Client-side Inquiry Persistence for Admin Console
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
@@ -182,8 +234,8 @@ export default function App() {
     });
   };
 
-  // Save inquiry handler
-  const handleInquirySubmit = (e: React.FormEvent) => {
+  // Save inquiry handler (Google Sheet 연동 버전)
+  const handleInquirySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errors: Record<string, string> = {};
     if (!formData.companyName.trim()) errors.companyName = '회사명(법인명)을 입력해 주세요.';
@@ -200,7 +252,6 @@ export default function App() {
 
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
-      // Auto-scroll to first error element
       const firstErrKey = Object.keys(errors)[0];
       const el = document.getElementsByName(firstErrKey)[0];
       if (el) el.focus();
@@ -208,29 +259,67 @@ export default function App() {
     }
 
     setFormErrors({});
+    setIsSending(true); // 전송 시작
+
+    // --- 구글 시트 전송 로직 시작 ---
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxs9J4uJca2d8GymyYnAQsh94DOE6q8e9_8emYyRxf-vVQQVrKuXRERuNPKSmP-GaPVlg/exec';
     
-    const newInquiry: Inquiry = {
-      id: `inq-${Date.now()}`,
-      companyName: formData.companyName,
-      brandName: formData.brandName,
-      brandUrl: formData.brandUrl || undefined,
-      contactName: formData.contactName,
-      email: formData.email,
+    const targetMarketsArr = [];
+    if (formData.india) targetMarketsArr.push("인도");
+    if (formData.usa) targetMarketsArr.push("미국");
+
+    const googleSheetData = {
+      company: formData.companyName,
+      brand: formData.brandName,
+      applicant: formData.contactName,
       phone: formData.phone,
+      email: formData.email,
+      website: formData.brandUrl,
+      targetMarkets: targetMarketsArr,
       category: formData.category,
-      status: 'new',
-      message: formData.message,
-      createdAt: new Date().toISOString(),
-      targetMarkets: {
-        india: formData.india,
-        usa: formData.usa
-      }
+      message: formData.message
     };
 
-    const updatedInquiries = [newInquiry, ...inquiries];
-    setInquiries(updatedInquiries);
-    localStorage.setItem('kglow_inquiries', JSON.stringify(updatedInquiries));
-    setFormSubmitted(true);
+    try {
+      // 구글 앱스 스크립트로 데이터 전송
+      await fetch(scriptURL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(googleSheetData)
+      });
+
+      // --- 기존 로직 (로컬 관리자 화면 저장) 유지 ---
+      const newInquiry: Inquiry = {
+        id: `inq-${Date.now()}`,
+        companyName: formData.companyName,
+        brandName: formData.brandName,
+        brandUrl: formData.brandUrl || undefined,
+        contactName: formData.contactName,
+        email: formData.email,
+        phone: formData.phone,
+        category: formData.category,
+        status: 'new',
+        message: formData.message,
+        createdAt: new Date().toISOString(),
+        targetMarkets: {
+          india: formData.india,
+          usa: formData.usa
+        }
+      };
+
+      const updatedInquiries = [newInquiry, ...inquiries];
+      setInquiries(updatedInquiries);
+      localStorage.setItem('kglow_inquiries', JSON.stringify(updatedInquiries));
+      
+      setFormSubmitted(true);
+      alert('문의가 성공적으로 접수되었습니다. 구글 시트를 확인해 보세요!');
+    } catch (error) {
+      console.error('Error!', error);
+      alert('전송 중 오류가 발생했습니다. 다시 시도해 주세요.');
+    } finally {
+      setIsSending(false);
+    }
   };
 
   // Reset form
