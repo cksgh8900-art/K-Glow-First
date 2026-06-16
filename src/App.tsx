@@ -76,57 +76,6 @@ const INITIAL_INQUIRIES: Inquiry[] = [
 ];
 
 export default function App() {
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    // [중요] 아까 복사한 회사 계정의 웹 앱 URL을 여기에 넣으세요
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxs9J4uJca2d8GymyYnAQsh94DOE6q8e9_8emYyRxf-vVQQVrKuXRERuNPKSmP-GaPVlg/exec';
-    
-    const form = e.target;
-    const btn = form.querySelector('button[type="submit"]');
-    
-    // 버튼 중복 클릭 방지
-    btn.disabled = true;
-    btn.innerText = "제출 중...";
-
-    // 체크박스(타켓 마켓) 데이터 처리를 위한 로직
-    const formData = new FormData(form);
-    const targetMarkets = [];
-    form.querySelectorAll('input[name="targetMarkets"]:checked').forEach((checkbox) => {
-      targetMarkets.push(checkbox.value);
-    });
-
-    const data = {
-      company: formData.get('company'),
-      brand: formData.get('brand'),
-      applicant: formData.get('applicant'),
-      phone: formData.get('phone'),
-      email: formData.get('email'),
-      website: formData.get('website'),
-      targetMarkets: targetMarkets, // 배열로 전달
-      category: formData.get('category'),
-      message: formData.get('message')
-    };
-
-    fetch(scriptURL, {
-      method: 'POST',
-      mode: 'no-cors', // 구글 앱스 스크립트와 통신할 때 필수 설정
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    })
-    .then(() => {
-      alert('성공적으로 접수되었습니다. 담당자가 곧 연락드리겠습니다.');
-      form.reset();
-      btn.disabled = false;
-      btn.innerText = "K-Glow 가속 솔루션 승인 문의 제출";
-    })
-    .catch(error => {
-      console.error('Error!', error.message);
-      alert('오류가 발생했습니다. 다시 시도해주세요.');
-      btn.disabled = false;
-      btn.innerText = "K-Glow 가속 솔루션 승인 문의 제출";
-    });
-  };
   // Navigation active state for style highlights
   const [activeSection, setActiveSection] = useState('hero');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -164,7 +113,6 @@ export default function App() {
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [formSubmitted, setFormSubmitted] = useState(false);
-  const [isSending, setIsSending] = useState(false);
 
   // Client-side Inquiry Persistence for Admin Console
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
@@ -234,8 +182,8 @@ export default function App() {
     });
   };
 
-  // Save inquiry handler (Google Sheet 연동 버전)
-  const handleInquirySubmit = async (e: React.FormEvent) => {
+  // Save inquiry handler
+  const handleInquirySubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const errors: Record<string, string> = {};
     if (!formData.companyName.trim()) errors.companyName = '회사명(법인명)을 입력해 주세요.';
@@ -252,6 +200,7 @@ export default function App() {
 
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
+      // Auto-scroll to first error element
       const firstErrKey = Object.keys(errors)[0];
       const el = document.getElementsByName(firstErrKey)[0];
       if (el) el.focus();
@@ -259,67 +208,29 @@ export default function App() {
     }
 
     setFormErrors({});
-    setIsSending(true); // 전송 시작
-
-    // --- 구글 시트 전송 로직 시작 ---
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxs9J4uJca2d8GymyYnAQsh94DOE6q8e9_8emYyRxf-vVQQVrKuXRERuNPKSmP-GaPVlg/exec';
     
-    const targetMarketsArr = [];
-    if (formData.india) targetMarketsArr.push("인도");
-    if (formData.usa) targetMarketsArr.push("미국");
-
-    const googleSheetData = {
-      company: formData.companyName,
-      brand: formData.brandName,
-      applicant: formData.contactName,
-      phone: formData.phone,
+    const newInquiry: Inquiry = {
+      id: `inq-${Date.now()}`,
+      companyName: formData.companyName,
+      brandName: formData.brandName,
+      brandUrl: formData.brandUrl || undefined,
+      contactName: formData.contactName,
       email: formData.email,
-      website: formData.brandUrl,
-      targetMarkets: targetMarketsArr,
+      phone: formData.phone,
       category: formData.category,
-      message: formData.message
+      status: 'new',
+      message: formData.message,
+      createdAt: new Date().toISOString(),
+      targetMarkets: {
+        india: formData.india,
+        usa: formData.usa
+      }
     };
 
-    try {
-      // 구글 앱스 스크립트로 데이터 전송
-      await fetch(scriptURL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(googleSheetData)
-      });
-
-      // --- 기존 로직 (로컬 관리자 화면 저장) 유지 ---
-      const newInquiry: Inquiry = {
-        id: `inq-${Date.now()}`,
-        companyName: formData.companyName,
-        brandName: formData.brandName,
-        brandUrl: formData.brandUrl || undefined,
-        contactName: formData.contactName,
-        email: formData.email,
-        phone: formData.phone,
-        category: formData.category,
-        status: 'new',
-        message: formData.message,
-        createdAt: new Date().toISOString(),
-        targetMarkets: {
-          india: formData.india,
-          usa: formData.usa
-        }
-      };
-
-      const updatedInquiries = [newInquiry, ...inquiries];
-      setInquiries(updatedInquiries);
-      localStorage.setItem('kglow_inquiries', JSON.stringify(updatedInquiries));
-      
-      setFormSubmitted(true);
-      alert('문의가 성공적으로 접수되었습니다. 구글 시트를 확인해 보세요!');
-    } catch (error) {
-      console.error('Error!', error);
-      alert('전송 중 오류가 발생했습니다. 다시 시도해 주세요.');
-    } finally {
-      setIsSending(false);
-    }
+    const updatedInquiries = [newInquiry, ...inquiries];
+    setInquiries(updatedInquiries);
+    localStorage.setItem('kglow_inquiries', JSON.stringify(updatedInquiries));
+    setFormSubmitted(true);
   };
 
   // Reset form
@@ -696,10 +607,10 @@ export default function App() {
                   transition={{ delay: 0.1, duration: 0.7 }}
                   className="font-display font-black text-3xl sm:text-4xl md:text-5xl lg:text-6xl tracking-tight leading-tight break-keep"
                 >
-                  K-Beauty 글로벌 성장,<br />
+                  K-Beauty 글로벌 성장,<br className="hidden sm:inline" />
                   <span className="bg-gradient-to-r from-[#e07a5f] via-[#c5a880] to-[#fae6df] bg-clip-text text-transparent animate-glow-text">
                     인도와 미국 시장
-                  </span>을 잇는<br />
+                  </span>을 잇는<br className="hidden sm:inline" />
                   독보적 2-Track 전략
                 </motion.h1>
 
@@ -864,7 +775,7 @@ export default function App() {
           <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
             <span className="text-xs font-bold tracking-widest text-[#b54624] bg-orange-50 px-3.5 py-1.5 rounded-full uppercase">Difficulties in Global Scaling</span>
             <h2 className="text-3xl sm:text-4xl font-display font-black text-slate-900 tracking-tight break-keep">
-              해외 수출 대행사의 뻔한 언어 장벽,<br />
+              해외 수출 대행사의 뻔한 언어 장벽,<br className="hidden sm:inline" />
               <span className="text-brand-600">진짜 병목</span>은 다른 곳에 있습니다.
             </h2>
             <p className="text-slate-600 font-light text-base leading-relaxed break-keep">
@@ -1073,7 +984,7 @@ export default function App() {
           <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
             <span className="text-xs font-bold tracking-widest text-[#b54624] bg-orange-50 px-3.5 py-1.5 rounded-full uppercase">K-Glow 2-Track Portfolio</span>
             <h2 className="text-3xl sm:text-4xl font-display font-black text-slate-900 tracking-tight break-keep">
-              수익(Cash Flow)과 자산가치를 동시에,<br />
+              수익(Cash Flow)과 자산가치를 동시에,<br className="hidden sm:inline" />
               <span className="text-brand-600">전략적 양방향 타겟 노선</span>
             </h2>
             <p className="text-slate-600 font-light text-base leading-relaxed break-keep">
@@ -1374,7 +1285,7 @@ export default function App() {
           <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
             <span className="text-xs font-bold tracking-widest text-[#b54624] bg-orange-50 px-3.5 py-1.5 rounded-full uppercase">Step-By-Step Operation Flow</span>
             <h2 className="text-3xl sm:text-4xl font-display font-black text-slate-900 tracking-tight break-keep">
-              한국 - K-Glow 인도 - K-Glow 한국<br />
+              한국 - K-Glow 인도 - K-Glow 한국<br className="hidden sm:inline" />
               <span className="text-brand-600">유기적 3자 밀착 가속 파이프라인</span>
             </h2>
             <p className="text-slate-600 font-light text-base leading-relaxed break-keep">
@@ -1480,7 +1391,7 @@ export default function App() {
           <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
             <span className="text-xs font-bold tracking-widest text-[#b54624] bg-orange-50 px-3.5 py-1.5 rounded-full uppercase">Why Choose K-Glow?</span>
             <h2 className="text-3xl sm:text-4xl font-display font-black text-slate-900 tracking-tight break-keep">
-              글로벌 파트너를 원하십니까,<br />
+              글로벌 파트너를 원하십니까,<br className="hidden sm:inline" />
               <span className="text-brand-600">성장에만 미쳐있는 동반체</span>를 원하십니까?
             </h2>
             <p className="text-slate-600 font-light text-base leading-relaxed break-keep">
@@ -1496,7 +1407,7 @@ export default function App() {
                 <Building className="w-6 h-6" />
               </div>
               <div className="space-y-2">
-                <h4 className="font-bold text-lg text-slate-900 leading-snug">현지 법인 보유의<br />독점 안정성</h4>
+                <h4 className="font-bold text-lg text-slate-900 leading-snug">현지 법인 보유의<br className="hidden md:inline" /> 독점 안정성</h4>
                 <p className="text-xs text-slate-500 leading-relaxed font-light">
                   인도 델리 현지에 정식 수입 통관 라이선스를 보유한 K-Glow 독점 자사 법인을 직접 가동합니다. 대리점의 일방 계약 파기나 통관 보류로 인한 재정 리스크가 100% 원친 해수됩니다.
                 </p>
@@ -1509,7 +1420,7 @@ export default function App() {
                 <Coins className="w-6 h-6" />
               </div>
               <div className="space-y-2">
-                <h4 className="font-bold text-lg text-slate-900 leading-snug">물류 혁신 특권<br />(인도 FTWZ 소유)</h4>
+                <h4 className="font-bold text-lg text-slate-900 leading-snug">물류 혁신 특권<br className="hidden md:inline" /> (인도 FTWZ 소유)</h4>
                 <p className="text-xs text-slate-500 leading-relaxed font-light">
                   해외에 화장품이 닿자마자 고율의 세금을 선지급할 필요가 없습니다. K-Glow만의 면세물류 전진보초구인 FTWZ 특혜를 주선하여 주 단위, 판매 실적 단위로 영리하게 부분 수입 통관시킵니다.
                 </p>
@@ -1522,7 +1433,7 @@ export default function App() {
                 <Award className="w-6 h-6" />
               </div>
               <div className="space-y-2">
-                <h4 className="font-bold text-lg text-slate-900 leading-snug">2-Track 완벽한<br />수익 안전 대칭성</h4>
+                <h4 className="font-bold text-lg text-slate-900 leading-snug">2-Track 완벽한<br className="hidden md:inline" /> 수익 안전 대칭성</h4>
                 <p className="text-xs text-slate-500 leading-relaxed font-light">
                   회사의 장기 성장을 위해 인도 시장 타겟 선순위를 개설하면서도, 동시 미국 아마존 및 고효율 미국 틱톡 숍 제휴 캠페인을 통하여 단기 운영 자본을 매주 속도감 높게 확보해 드립니다.
                 </p>
@@ -1566,7 +1477,7 @@ export default function App() {
           <div className="text-center mb-16 space-y-4">
             <span className="text-xs font-bold tracking-widest text-[#b54624] bg-orange-50 px-3.5 py-1.5 rounded-full uppercase">FAQ HELP DESK</span>
             <h2 className="text-3xl sm:text-4xl font-display font-black text-slate-900 tracking-tight break-keep">
-              글로벌 확장이 처음인 브랜드를 위한<br />
+              글로벌 확장이 처음인 브랜드를 위한<br className="hidden sm:inline" />
               <span className="text-brand-600">비즈니스 현실적 팩트 체크</span>
             </h2>
             <p className="text-slate-500 text-sm font-light max-w-xl mx-auto break-keep">
@@ -1632,10 +1543,10 @@ export default function App() {
               <div className="space-y-6 text-center md:text-left">
                 <span className="text-xs font-bold tracking-widest text-[#e07a5f] bg-brand-500/10 px-3.5 py-1.5 rounded-full uppercase border border-[#e07a5f]/20 font-mono">Ready to Scale?</span>
                 <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display font-black leading-tight break-keep">
-                  더 늦기 전에,<br />
+                  더 늦기 전에,<br className="hidden sm:inline" />
                   <span className="bg-gradient-to-r from-[#e07a5f] via-[#c5a880] to-white bg-clip-text text-transparent">
                     K-Glow의 폭발적 가속력
-                  </span>을<br />
+                  </span>을<br className="hidden sm:inline" />
                   장착하십시오.
                 </h2>
                 <p className="text-slate-300 font-light text-sm sm:text-base leading-relaxed max-w-xl break-keep">
