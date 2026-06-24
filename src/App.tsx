@@ -9,96 +9,38 @@ import {
   ArrowRight,
   MapPin,
   Sparkles,
-  Layers,
-  Store,
   Phone,
   Mail,
-  FileText,
   Lock,
-  Settings,
-  Activity,
-  Check,
-  X,
-  ChevronDown,
-  ChevronUp,
   Building,
   Award,
   Clock,
-  ExternalLink,
-  Plus,
   Compass,
-  Copy,
   Database,
-  Menu
+  Menu,
+  X,
+  ChevronDown,
+  HelpCircle,
+  Truck,
+  DollarSign
 } from 'lucide-react';
-import { Inquiry, ProcessStep, ProblemSolutionItem, ServiceCapability, FaqItem } from './types';
-import { PROCESS_STEPS, PROBLEMS_AND_SOLUTIONS, SERVICE_CAPABILITIES, FAQS } from './data';
+
 // @ts-ignore
 import heroMapVisual from './assets/images/hero_map_visual_1781575693556.jpg';
 // @ts-ignore
-import customsBarrierGraphic from './assets/images/customs_barrier_graphic_1781575885337.jpg';
-// @ts-ignore
-import ftwzWarehouseAmbient from './assets/images/ftwz_warehouse_ambient_1781576033572.jpg';
+import ftwzWarehouseAmbient from './assets/images/india_ftwz_warehouse_1781844449776.jpg';
 // @ts-ignore
 import usaTiktokLivestream from './assets/images/usa_tiktok_livestream_1781576835623.jpg';
 
-
-// Initial dummy inquiries to showcase the Admin Inquiry management system right away if local storage is empty
-const INITIAL_INQUIRIES: Inquiry[] = [
-  {
-    id: 'inq-1',
-    companyName: '(주)라온코스메틱',
-    brandName: 'LAONPURE',
-    brandUrl: 'https://example-laonpure.com',
-    contactName: '김지현 수석',
-    email: 'jh.kim@raoncos.co.kr',
-    phone: '010-1234-5678',
-    category: 'skincare',
-    status: 'reviewing',
-    message: '인도  Nykaa 입점과 미국 아마존 연동 진출을 동시에 모색하고 있는 브랜드입니다. 현재 한국에서 CDSCO 인증 절차를 단독 시도하다 보완 명령이 내려져 해결책이 시급합니다. FTWZ 물류 보관 관세 이월 혜택에 상세 설명을 전해 받고 싶습니다.',
-    createdAt: '2026-06-15T11:24:00-07:00',
-    targetMarkets: { india: true, usa: true }
-  },
-  {
-    id: 'inq-2',
-    companyName: '블러썸뷰티 그룹',
-    brandName: 'BLOSSOM_GLOW',
-    brandUrl: 'https://example-blossomglow.com',
-    contactName: '박민우 본부장',
-    email: 'mw.park@blossombeauty.com',
-    phone: '010-9876-5432',
-    category: 'makeup',
-    status: 'new',
-    message: '미국 시장 틱톡 숍 완판 이력을 바탕으로, 현금 유동성(Cash Flow)을 단단히 굳히면서 아시아 최대 전략지인 인도 FBA 진입 타당성을 타진해 보고 싶습니다.',
-    createdAt: '2026-06-15T16:15:00-07:00',
-    targetMarkets: { india: true, usa: true }
-  }
-];
-
 export default function App() {
-  // Navigation active state for style highlights
-  const [activeSection, setActiveSection] = useState('hero');
+  const [activeSection, setActiveSection] = useState('home');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  // Track select tabs (USA vs India)
-  const [selectedTrack, setSelectedTrack] = useState<'USA' | 'India'>('USA');
-
-  // Core Process Active Phase Slider
-  const [activeProcessStep, setActiveProcessStep] = useState<number>(1);
-
-  // Accordion state for FAQs
-  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
-
-  // FTWZ interactive calculator cargo value (USD)
   const [cargoValue, setCargoValue] = useState<number>(50000);
-
-  // Copied prompt feedback notification state
-  const [copiedPromptId, setCopiedPromptId] = useState<string | null>(null);
-
-  // Redesigned interactive Problem & Solution hover card state
-  const [activeProblemId, setActiveProblemId] = useState<number | null>(null);
-
-  // Form states
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
+  const [openProblemIndex, setOpenProblemIndex] = useState<number | null>(0);
+  const [openStrengthIndex, setOpenStrengthIndex] = useState<number | null>(0);
+  const [selectedStrengthModal, setSelectedStrengthModal] = useState<number | null>(null);
+  const [formSubmitted, setFormSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     companyName: '',
     brandName: '',
@@ -106,83 +48,39 @@ export default function App() {
     contactName: '',
     email: '',
     phone: '',
-    category: 'skincare' as Inquiry['category'],
+    category: 'skincare',
     message: '',
     india: true,
     usa: true
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const [formSubmitted, setFormSubmitted] = useState(false);
-
-  // Client-side Inquiry Persistence for Admin Console
-  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
-  const [isAdminOpen, setIsAdminOpen] = useState(false);
-  const [selectedInquiryDetail, setSelectedInquiryDetail] = useState<Inquiry | null>(null);
-  const [adminNote, setAdminNote] = useState('');
-
-  // Hydrate local storage inquiries
-  useEffect(() => {
-    const saved = localStorage.getItem('kglow_inquiries');
-    if (saved) {
-      try {
-        setInquiries(JSON.parse(saved));
-      } catch (e) {
-        setInquiries(INITIAL_INQUIRIES);
-      }
-    } else {
-      setInquiries(INITIAL_INQUIRIES);
-      localStorage.setItem('kglow_inquiries', JSON.stringify(INITIAL_INQUIRIES));
-    }
-  }, []);
 
   // Sync scroll positions for section active state
   useEffect(() => {
     const handleScroll = () => {
-      const scrollY = window.scrollY;
-      const sections = ['hero', 'problems', 'strategy', 'process', 'why', 'faq', 'contact'];
+      const sections = ['problems', 'strategy', 'process', 'why', 'faq', 'contact'];
+      const scrollPosition = window.scrollY + 200;
+
       for (const section of sections) {
         const el = document.getElementById(section);
         if (el) {
-          const offsetTop = el.offsetTop - 120;
-          const offsetHeight = el.offsetHeight;
-          if (scrollY >= offsetTop && scrollY < offsetTop + offsetHeight) {
+          const top = el.offsetTop;
+          const height = el.offsetHeight;
+          if (scrollPosition >= top && scrollPosition < top + height) {
             setActiveSection(section);
-            break;
+            return;
           }
         }
       }
+      if (window.scrollY < 100) {
+        setActiveSection('home');
+      }
     };
+
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Copy to clipboard helper for image prompts kit
-  const handleCopyPrompt = (promptText: string, id: string) => {
-    navigator.clipboard.writeText(promptText).then(() => {
-      setCopiedPromptId(id);
-      setTimeout(() => {
-        setCopiedPromptId(null);
-      }, 2000);
-    }).catch(() => {
-      // safe fallback for iframe environments where clipboard API might be blocked
-      const textArea = document.createElement('textarea');
-      textArea.value = promptText;
-      document.body.appendChild(textArea);
-      textArea.select();
-      try {
-        document.execCommand('copy');
-        setCopiedPromptId(id);
-        setTimeout(() => {
-          setCopiedPromptId(null);
-        }, 2000);
-      } catch (err) {
-        console.error('Copy failed', err);
-      }
-      document.body.removeChild(textArea);
-    });
-  };
-
-  // Save inquiry handler
   const handleInquirySubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const errors: Record<string, string> = {};
@@ -196,44 +94,16 @@ export default function App() {
     }
     if (!formData.phone.trim()) errors.phone = '연락처를 입력해 주세요.';
     if (!formData.message.trim()) errors.message = '문의 내용을 구체적으로 기록해 주세요.';
-    if (!formData.india && !formData.usa) errors.targetMarkets = '희망 진출 대상국을 최소 하나 이상 선택해 주세요.';
 
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
-      // Auto-scroll to first error element
-      const firstErrKey = Object.keys(errors)[0];
-      const el = document.getElementsByName(firstErrKey)[0];
-      if (el) el.focus();
       return;
     }
 
     setFormErrors({});
-    
-    const newInquiry: Inquiry = {
-      id: `inq-${Date.now()}`,
-      companyName: formData.companyName,
-      brandName: formData.brandName,
-      brandUrl: formData.brandUrl || undefined,
-      contactName: formData.contactName,
-      email: formData.email,
-      phone: formData.phone,
-      category: formData.category,
-      status: 'new',
-      message: formData.message,
-      createdAt: new Date().toISOString(),
-      targetMarkets: {
-        india: formData.india,
-        usa: formData.usa
-      }
-    };
-
-    const updatedInquiries = [newInquiry, ...inquiries];
-    setInquiries(updatedInquiries);
-    localStorage.setItem('kglow_inquiries', JSON.stringify(updatedInquiries));
     setFormSubmitted(true);
   };
 
-  // Reset form
   const resetForm = () => {
     setFormData({
       companyName: '',
@@ -250,1271 +120,264 @@ export default function App() {
     setFormSubmitted(false);
   };
 
-  // Admin: Update Inquiry status
-  const updateInquiryStatus = (id: string, newStatus: Inquiry['status']) => {
-    const updated = inquiries.map((inq) => {
-      if (inq.id === id) {
-        return { ...inq, status: newStatus };
-      }
-      return inq;
-    });
-    setInquiries(updated);
-    localStorage.setItem('kglow_inquiries', JSON.stringify(updated));
-    if (selectedInquiryDetail && selectedInquiryDetail.id === id) {
-      setSelectedInquiryDetail({ ...selectedInquiryDetail, status: newStatus });
-    }
-  };
-
-  // Admin: Delete Inquiry
-  const deleteInquiry = (id: string) => {
-    if (confirm('해당 입점 문의 신청을 삭제하시겠습니까?')) {
-      const updated = inquiries.filter((inq) => inq.id !== id);
-      setInquiries(updated);
-      localStorage.setItem('kglow_inquiries', JSON.stringify(updated));
-      setSelectedInquiryDetail(null);
-    }
-  };
-
-  // Render Category Label
-  const getCategoryLabel = (cat: Inquiry['category']) => {
-    switch (cat) {
-      case 'skincare': return '스킨케어 (Skincare)';
-      case 'makeup': return '메이크업 (Makeup)';
-      case 'hairbody': return '헤어/바디 (Hair & Body)';
-      default: return '기타 뷰티 및 부대 카테고리';
-    }
-  };
-
-  const getStatusBadge = (status: Inquiry['status']) => {
-    switch (status) {
-      case 'new':
-        return <span className="px-2.5 py-1 text-xs font-semibold bg-red-50 text-red-600 rounded-full border border-red-200">신규 신청</span>;
-      case 'reviewing':
-        return <span className="px-2.5 py-1 text-xs font-semibold bg-amber-50 text-amber-600 rounded-full border border-amber-200">검토 분석중</span>;
-      case 'processing':
-        return <span className="px-2.5 py-1 text-xs font-semibold bg-blue-50 text-blue-600 rounded-full border border-blue-200">상담 배정</span>;
-      case 'done':
-        return <span className="px-2.5 py-1 text-xs font-semibold bg-emerald-50 text-emerald-600 rounded-full border border-emerald-200">협의 완료</span>;
-    }
-  };
-
   return (
-    <div className="min-h-screen flex flex-col font-sans bg-[#fafaf8]" id="home">
+    <div className="min-h-screen flex flex-col font-sans bg-[#faf9f6] text-[#1e293b] antialiased" id="home">
       
-      {/* HEADER SECTION */}
-      <header className="sticky top-0 z-45 w-full border-b border-orange-100/40 bg-[#fafaf8]/80 backdrop-blur-md transition-all duration-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between relative">
+      {/* HEADER SECTION - Glassmorphism Navigation */}
+      <header className="sticky top-0 z-50 w-full border-b border-orange-100/40 bg-[#fafaf8]/85 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           
-          {/* Logo */}
-          <a href="#home" className="flex items-center gap-2.5 group shrink-0">
-            <span className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-luxury-gold flex items-center justify-center text-white font-display font-bold text-xl shadow-lg shadow-brand-500/20 group-hover:scale-105 transition-transform duration-300">K</span>
-            <div className="flex flex-col select-none whitespace-nowrap">
-              <span className="font-display font-black text-xl sm:text-2xl tracking-wider text-slate-900 group-hover:text-brand-600 transition-colors duration-200 leading-none mb-0.5">K-GLOW</span>
-              <span className="text-[9px] sm:text-[10px] font-bold tracking-widest text-[#b54624]/80 uppercase leading-none">Global Accelerator</span>
+          {/* Logo Brand Element */}
+          <a href="#home" className="flex items-center gap-2.5 group">
+            <span className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#cf5c36] to-[#c5a880] flex items-center justify-center text-white font-display font-bold text-xl shadow-md transition-transform group-hover:scale-105">K</span>
+            <div className="flex flex-col select-none text-left">
+              <span className="font-display font-black text-lg tracking-wider text-slate-900 group-hover:text-[#cf5c36] transition-colors leading-none mb-0.5">K-GLOW</span>
+              <span className="text-[10px] font-semibold tracking-widest text-[#b54624] uppercase leading-none">Global Accelerator</span>
             </div>
           </a>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-6 lg:space-x-8">
-            <a href="#problems" className={`text-sm font-semibold whitespace-nowrap transition-colors duration-200 ${activeSection === 'problems' ? 'text-brand-600' : 'text-slate-600 hover:text-slate-900'}`}>비즈니스 난제</a>
-            <a href="#strategy" className={`text-sm font-semibold whitespace-nowrap transition-colors duration-200 ${activeSection === 'strategy' ? 'text-brand-600' : 'text-slate-600 hover:text-slate-900'}`}>2-Track 전략</a>
-            <a href="#process" className={`text-sm font-semibold whitespace-nowrap transition-colors duration-200 ${activeSection === 'process' ? 'text-brand-600' : 'text-slate-600 hover:text-slate-900'}`}>3자 협업 프로세스</a>
-            <a href="#why" className={`text-sm font-semibold whitespace-nowrap transition-colors duration-200 ${activeSection === 'why' ? 'text-brand-600' : 'text-slate-600 hover:text-slate-900'}`}>K-Glow 강점</a>
-            <a href="#faq" className={`text-sm font-semibold whitespace-nowrap transition-colors duration-200 ${activeSection === 'faq' ? 'text-brand-600' : 'text-slate-600 hover:text-slate-900'}`}>자주 묻는 질문</a>
+          {/* Desktop Navigation Menu */}
+          <nav className="hidden lg:flex items-center space-x-8">
+            <a href="#problems" className={`flex items-center text-sm font-semibold tracking-tight transition-colors duration-200 ${activeSection === 'problems' ? 'text-[#b54624]' : 'text-slate-600 hover:text-slate-900'}`}>
+              비즈니스 난제
+            </a>
+            <a href="#strategy" className={`flex items-center text-sm font-semibold tracking-tight transition-colors duration-200 ${activeSection === 'strategy' ? 'text-[#b54624]' : 'text-slate-600 hover:text-slate-900'}`}>
+              2-Track 전략
+            </a>
+            <a href="#process" className={`flex items-center text-sm font-semibold tracking-tight transition-colors duration-200 ${activeSection === 'process' ? 'text-[#b54624]' : 'text-slate-600 hover:text-slate-900'}`}>
+              3자 프로세스
+            </a>
+            <a href="#why" className={`flex items-center text-sm font-semibold tracking-tight transition-colors duration-200 ${activeSection === 'why' ? 'text-[#b54624]' : 'text-slate-600 hover:text-slate-900'}`}>
+              K-Glow 강점
+            </a>
+            <a href="#faq" className={`flex items-center text-sm font-semibold tracking-tight transition-colors duration-200 ${activeSection === 'faq' ? 'text-[#b54624]' : 'text-slate-600 hover:text-slate-900'}`}>
+              자주 묻는 질문
+            </a>
           </nav>
 
-          {/* Contact Buttons */}
-          <div className="flex items-center gap-3 shrink-0">
+          {/* Contact Direct Action Button */}
+          <div className="hidden lg:flex items-center">
             <a
               href="#contact"
-              className="hidden sm:inline-block px-5 py-2.5 rounded-lg bg-slate-900 text-white font-semibold text-sm whitespace-nowrap hover:bg-brand-600 transition-all duration-300 shadow-md hover:shadow-brand-500/20 hover:-translate-y-0.5 active:translate-y-0"
-              id="header_cta_btn"
+              className="flex items-center gap-1.5 px-5 py-2.5 rounded-lg bg-slate-900 text-white font-semibold text-sm hover:bg-[#b54624] transition-all duration-300 shadow-sm"
             >
-              가속 입점 문의
+              글로벌 입점 문의
             </a>
-            
-            {/* Tablet & Mobile Hamburger Toggle */}
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
-              aria-label="Toggle menu"
-            >
-              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
           </div>
 
-          {/* Mobile/Tablet Dropdown Navigation Menu */}
-          <AnimatePresence>
-            {isMobileMenuOpen && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                transition={{ duration: 0.15, ease: 'easeOut' }}
-                className="lg:hidden absolute right-4 sm:right-6 top-[72px] w-52 rounded-2xl border border-orange-100/40 bg-white/95 backdrop-blur-md shadow-xl z-50 overflow-hidden"
-              >
-                <div className="p-2 space-y-1">
-                  <a
-                    href="#problems"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`block text-xs font-semibold px-3 py-2 rounded-xl transition-colors ${activeSection === 'problems' ? 'bg-orange-50/60 text-brand-600' : 'text-slate-700 hover:bg-slate-50'}`}
-                  >
-                    비즈니스 난제
-                  </a>
-                  <a
-                    href="#strategy"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`block text-xs font-semibold px-3 py-2 rounded-xl transition-colors ${activeSection === 'strategy' ? 'bg-orange-50/60 text-brand-600' : 'text-slate-700 hover:bg-slate-50'}`}
-                  >
-                    2-Track 전략
-                  </a>
-                  <a
-                    href="#process"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`block text-xs font-semibold px-3 py-2 rounded-xl transition-colors ${activeSection === 'process' ? 'bg-orange-50/60 text-brand-600' : 'text-slate-700 hover:bg-slate-50'}`}
-                  >
-                    3자 협업 프로세스
-                  </a>
-                  <a
-                    href="#why"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`block text-xs font-semibold px-3 py-2 rounded-xl transition-colors ${activeSection === 'why' ? 'bg-orange-50/60 text-brand-600' : 'text-slate-700 hover:bg-slate-50'}`}
-                  >
-                    K-Glow 강점
-                  </a>
-                  <a
-                    href="#faq"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`block text-xs font-semibold px-3 py-2 rounded-xl transition-colors ${activeSection === 'faq' ? 'bg-orange-50/60 text-brand-600' : 'text-slate-700 hover:bg-slate-50'}`}
-                  >
-                    자주 묻는 질문
-                  </a>
-                  <div className="pt-2 sm:hidden border-t border-slate-100 mt-2">
-                    <a
-                      href="#contact"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="block w-full text-center py-2 px-3 rounded-xl bg-slate-900 text-white font-bold text-xs shadow-md hover:bg-brand-600 transition-colors"
-                    >
-                      가속 입점 문의
-                    </a>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </header>
-
-      {/* ADMIN CONSOLE COMPONENT: Hidden collapsible controller */}
-      <AnimatePresence>
-        {isAdminOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="bg-[#1e293b] text-slate-100 overflow-hidden border-b border-slate-700 shadow-inner"
-            id="admin_console_panel"
+          {/* Mobile responsive toggle */}
+          <button 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="lg:hidden p-2 rounded-lg text-slate-700 hover:bg-slate-100"
           >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-700 pb-4 mb-4 gap-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <Activity className="w-5 h-5 text-brand-500" />
-                    <h2 className="text-lg font-bold tracking-tight text-white">K-Glow 상담 승인 관리자 원장 (Inquiry Ledger)</h2>
-                  </div>
-                  <p className="text-xs text-slate-400 mt-1">사용자 페이지에서 제출한 입점 신청 문의내역이 즉각 저장되며 상태 제어 및 메모가 가능한 가상 시뮬레이션입니다.</p>
-                </div>
-                <button
-                  onClick={() => setIsAdminOpen(false)}
-                  className="p-1 rounded-full hover:bg-slate-700 text-slate-400 hover:text-white"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                {/* List portion */}
-                <div className="lg:col-span-5 bg-slate-900 rounded-lg p-4 border border-slate-700 max-h-80 overflow-y-auto">
-                  <span className="text-xs font-bold text-luxury-gold uppercase tracking-widest block mb-3">접수 리스트 ({inquiries.length}건)</span>
-                  {inquiries.length === 0 ? (
-                    <div className="text-center py-10 text-slate-500 text-sm">
-                      접수된 상담 문의가 아직 없습니다.
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {inquiries.map((inq) => (
-                        <div
-                          key={inq.id}
-                          onClick={() => {
-                            setSelectedInquiryDetail(inq);
-                            setAdminNote('');
-                          }}
-                          className={`p-3 rounded-lg border text-left cursor-pointer transition-all duration-200 hover:bg-slate-800 ${selectedInquiryDetail?.id === inq.id ? 'border-brand-500 bg-slate-800/80' : 'border-slate-800 bg-[#1e293b]'}`}
-                        >
-                          <div className="flex justify-between items-start mb-2">
-                            <span className="font-bold text-sm text-slate-100">{inq.companyName}</span>
-                            <span className="text-xs text-slate-400 flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              {new Date(inq.createdAt).toLocaleDateString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center text-xs">
-                            <div className="space-x-1.5">
-                              <span className="text-brand-500 font-semibold">[{inq.brandName}]</span>
-                              <span className="text-[#c5a880]">{getCategoryLabel(inq.category).split(' ')[0]}</span>
-                            </div>
-                            {getStatusBadge(inq.status)}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Detail view portion */}
-                <div className="lg:col-span-7 bg-slate-900 rounded-lg p-5 border border-slate-700">
-                  {selectedInquiryDetail ? (
-                    <div className="space-y-4">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-700 pb-3 gap-3">
-                        <div>
-                          <p className="text-xs text-slate-400">인증 및 가속 대기 브랜드</p>
-                          <h3 className="text-base font-bold text-white flex items-center gap-2">
-                            {selectedInquiryDetail.companyName} 
-                            <span className="text-sm font-normal text-slate-300">({selectedInquiryDetail.brandName})</span>
-                          </h3>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => updateInquiryStatus(selectedInquiryDetail.id, 'reviewing')}
-                            className={`px-2 py-1 rounded text-[11px] font-bold ${selectedInquiryDetail.status === 'reviewing' ? 'bg-amber-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
-                          >
-                            검토중
-                          </button>
-                          <button
-                            onClick={() => updateInquiryStatus(selectedInquiryDetail.id, 'processing')}
-                            className={`px-2 py-1 rounded text-[11px] font-bold ${selectedInquiryDetail.status === 'processing' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
-                          >
-                            상담배정
-                          </button>
-                          <button
-                            onClick={() => updateInquiryStatus(selectedInquiryDetail.id, 'done')}
-                            className={`px-2 py-1 rounded text-[11px] font-bold ${selectedInquiryDetail.status === 'done' ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
-                          >
-                            수행완료
-                          </button>
-                          <button
-                            onClick={() => deleteInquiry(selectedInquiryDetail.id)}
-                            className="p-1 bg-red-950/40 text-red-400 rounded hover:bg-red-950 hover:text-red-300"
-                            title="상담정보 파기"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-slate-800/80 p-3 rounded-lg border border-slate-700">
-                        <div>
-                          <span className="text-slate-400 block mb-1">담당자 및 직책</span>
-                          <span className="font-semibold text-slate-100">{selectedInquiryDetail.contactName}</span>
-                        </div>
-                        <div>
-                          <span className="text-slate-400 block mb-1">파트너 연계 연락망</span>
-                          <span className="font-semibold text-slate-100">{selectedInquiryDetail.phone}</span>
-                        </div>
-                        <div className="sm:col-span-1">
-                          <span className="text-slate-400 block mb-1">제안 이메일 주소</span>
-                          <span className="font-semibold text-slate-100">{selectedInquiryDetail.email}</span>
-                        </div>
-                        <div>
-                          <span className="text-slate-400 block mb-1">희망 타겟 마켓 포트폴리오</span>
-                          <span className="font-semibold text-slate-100">
-                            {selectedInquiryDetail.targetMarkets.india ? '🇮🇳 인도 진출 (Track 2) ' : ''}
-                            {selectedInquiryDetail.targetMarkets.usa ? '🇺🇸 미국 진출 (Track 1)' : ''}
-                          </span>
-                        </div>
-                        {selectedInquiryDetail.brandUrl && (
-                          <div className="sm:col-span-2 border-t border-slate-700/60 pt-2 flex items-center justify-between">
-                            <span className="text-slate-400">브랜드 공식 자사몰</span>
-                            <a
-                              href={selectedInquiryDetail.brandUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-[#c5a880] hover:underline flex items-center gap-1"
-                            >
-                              {selectedInquiryDetail.brandUrl} <ExternalLink className="w-3 h-3" />
-                            </a>
-                          </div>
-                        )}
-                      </div>
-
-                      <div>
-                        <span className="text-xs text-slate-400 block mb-1">협력 요청 및 통관 문의 사항</span>
-                        <div className="p-3 bg-[#1e293b] rounded-lg border border-slate-800 text-xs text-slate-200 leading-relaxed whitespace-pre-wrap max-h-32 overflow-y-auto">
-                          {selectedInquiryDetail.message}
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-20 text-slate-500 text-sm">
-                      좌측 문의 목록에서 파트너십 내역을 선택하면<br />K-Glow 현지 담당자용 원장 상세보기가 로드됩니다.
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* HERO SECTION WITH MAP BACKGROUND */}
-      <section 
-        className="relative overflow-hidden text-white pt-24 pb-32 bg-no-repeat bg-cover bg-center lg:bg-[length:112%_auto] lg:bg-[position:80%_35%] bg-[#0f1624]" 
-        style={{ 
-          backgroundImage: `linear-gradient(to right, rgba(15, 22, 36, 0.95) 15%, rgba(15, 22, 36, 0.8) 60%, rgba(15, 22, 36, 0.94) 100%), url(${heroMapVisual})` 
-        }}
-        id="hero"
-      >
-        
-        {/* Glow Ambient Orbs */}
-        <div className="absolute top-20 left-10 w-96 h-96 bg-brand-600/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-luxury-gold/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/3 w-[500px] h-[500px] bg-gradient-to-tr from-orange-500/5 to-cyan-500/5 rounded-full blur-3xl" />
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          
-          {/* Top Pill / Badge */}
-          <div className="flex justify-center md:justify-start mb-8">
-            <motion.div
-              initial={{ opacity: 0, y: -15 }}
+        {/* Mobile Navigation Panel */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-semibold backdrop-blur-sm"
+              exit={{ opacity: 0, y: -10 }}
+              className="lg:hidden absolute top-20 left-0 w-full bg-white border-b border-slate-100 shadow-lg px-4 py-6"
             >
-              <Compass className="w-4 h-4 text-[#e07a5f] animate-pulse" />
-              <span className="bg-gradient-to-r from-brand-100 to-luxury-gold bg-clip-text text-transparent">Korea & India Dual Entity Hub Operational</span>
-            </motion.div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            
-            {/* Copywriter portion */}
-            <div className="lg:col-span-7 space-y-8 text-center md:text-left">
-              
-              <div className="space-y-4">
-                <motion.h1
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1, duration: 0.7 }}
-                  className="font-display font-black text-3xl sm:text-4xl md:text-5xl lg:text-6xl tracking-tight leading-tight break-keep"
-                >
-                  K-Beauty 글로벌 성장,<br className="hidden sm:inline" />
-                  <span className="bg-gradient-to-r from-[#e07a5f] via-[#c5a880] to-[#fae6df] bg-clip-text text-transparent animate-glow-text">
-                    인도와 미국 시장
-                  </span>을 잇는<br className="hidden sm:inline" />
-                  독보적 2-Track 전략
-                </motion.h1>
-
-                <motion.p
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2, duration: 0.7 }}
-                  className="text-sm sm:text-base md:text-lg text-slate-300 leading-relaxed max-w-2xl font-light mx-auto md:mx-0 break-keep"
-                >
-                  K-Glow는 한국 본사와 인도 현지 법인을 직접 운영하는 글로벌 뷰티 액셀러레이터입니다. 복잡한 물류·인허가 혁신과 정교한 현지 채널 퍼포먼스를 연계하여 K-뷰티 마케팅의 확실한 지속력(Cash Flow)과 막강한 미래가치를 구축합니다.
-                </motion.p>
-              </div>
-
-              {/* Strategy Pills */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.7 }}
-                className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl mx-auto md:mx-0"
-              >
-                <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-left hover:border-[#e07a5f]/40 transition-colors duration-300 group">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold uppercase whitespace-nowrap">Track 01</span>
-                    <span className="font-semibold text-xs text-white uppercase tracking-widest font-mono">USA Market Focus</span>
-                  </div>
-                  <h4 className="font-bold text-sm text-slate-100 group-hover:text-[#e07a5f] transition-colors duration-200">즉각적 현금 유동성 (Cash Flow)</h4>
-                  <p className="text-xs text-slate-400 mt-1 leading-relaxed">미국 Amazon 및 TikTok Shop 유기적 캠페인 운영 대행을 바탕으로 속도감 높은 세일즈와 안정적 자본 루프를 보장합니다.</p>
-                </div>
-
-                <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-left hover:border-[#c5a880]/40 transition-colors duration-300 group">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="px-2 py-0.5 rounded text-[10px] bg-brand-500/10 text-[#c5a880] border border-[#c5a880]/30 font-bold uppercase whitespace-nowrap">Track 02</span>
-                    <span className="font-semibold text-xs text-white uppercase tracking-widest font-mono">India Market Preemption</span>
-                  </div>
-                  <h4 className="font-bold text-sm text-slate-100 group-hover:text-[#c5a880] transition-colors duration-200">세계 최대 독점 잠재 영토 선점</h4>
-                  <p className="text-xs text-slate-400 mt-1 leading-relaxed">인도 현지 법인 네트워크를 가동하여 복잡한 세관 장벽(FTWZ 및 CDSCO 특권)을 허물고 14억 인도 오디언스를 선점합니다.</p>
-                </div>
-              </motion.div>
-
-              {/* Action Buttons */}
-              <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4, duration: 0.7 }}
-                className="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-4"
-              >
+              <div className="flex flex-col space-y-3">
                 <a
-                  href="#contact"
-                  className="w-full sm:w-auto text-center px-8 py-4 rounded-xl bg-brand-500 text-white font-bold text-base hover:bg-brand-600 shadow-xl shadow-brand-500/15 transition-all duration-300 hover:-translate-y-1"
+                  href="#problems"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-2.5 text-sm font-semibold px-4 py-2.5 rounded-xl text-slate-700 hover:bg-slate-50"
                 >
-                  무료 글로벌 타당성 진단 신청
+                  비즈니스 난제
                 </a>
                 <a
                   href="#strategy"
-                  className="w-full sm:w-auto text-center px-8 py-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 font-bold text-base transition-all duration-300"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-2.5 text-sm font-semibold px-4 py-2.5 rounded-xl text-slate-700 hover:bg-slate-50"
                 >
-                  전략 자세히 보기
+                  2-Track 전략
                 </a>
-              </motion.div>
-
-              {/* Simple Proof points */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5, duration: 0.7 }}
-                className="flex items-center justify-center md:justify-start gap-8 pt-4 border-t border-white/5 text-slate-400 text-xs text-left"
-              >
-                <div>
-                  <span className="block font-display font-medium text-lg text-white">100%</span>
-                  인도 현지 직소유 법인
-                </div>
-                <div className="w-px h-8 bg-white/10" />
-                <div>
-                  <span className="block font-display font-medium text-lg text-white">0%</span>
-                  통관 지연 리스크 보장
-                </div>
-                <div className="w-px h-8 bg-white/10" />
-                <div>
-                  <span className="block font-display font-medium text-lg text-white">320%+</span>
-                  미국 Amazon 평균 PPC ROAS
-                </div>
-              </motion.div>
-
-            </div>
-
-            {/* Graphic illustration column */}
-            <div className="lg:col-span-5 relative mt-6 lg:mt-0">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.3, duration: 0.8 }}
-                className="relative bg-slate-900/60 p-6 rounded-3xl border border-white/10 backdrop-blur-sm shadow-2xl group"
-              >
-                <div className="absolute -top-3 -right-2 z-15 px-3 py-1 bg-brand-500 rounded-full text-[10px] font-bold tracking-widest text-white uppercase shadow-md shadow-brand-500/20">GLOBAL NET</div>
-                
-                {/* Simulated live visual dashboard depicting Dual Tracks */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between border-b border-white/5 pb-3">
-                    <span className="text-xs font-semibold text-slate-400 tracking-wider">K-GLOW DUAL TRACK MAP</span>
-                    <span className="flex items-center gap-1.5 text-[11px] text-[#c5a880] font-mono">
-                      <span className="w-2 h-2 rounded-full bg-green-500 animate-ping" />
-                      LIVE ROUTING OK
-                    </span>
-                  </div>
-
-                  {/* HIGH-RES GENERATED VISUAL MAP */}
-                  <div className="overflow-hidden rounded-2xl border border-white/10 shadow-inner relative aspect-video bg-slate-950">
-                    <img 
-                      src={heroMapVisual} 
-                      alt="K-Glow Global Logistics Gold-Path Luxury Map" 
-                      className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700" 
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/15 to-transparent flex flex-col justify-end p-4 text-left pointer-events-none">
-                      <p className="text-white text-[11px] font-medium leading-snug drop-shadow-sm font-sans mb-0.5">서울 본사 - 뉴델리 법인 골드 이월 관세 노선도</p>
-                      <p className="text-slate-400 text-[9px] font-light leading-none">Minimally Curated Dual-Track Custom Design</p>
-                    </div>
-                  </div>
-
-                  {/* Korea Hub Node */}
-                  <div className="p-4 rounded-xl bg-white/5 border border-white/5 relative text-left">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <Building className="w-4 h-4 text-[#e07a5f]" />
-                        <span className="text-xs font-bold text-white uppercase tracking-wider">K-Glow Korea (HQ)</span>
-                      </div>
-                      <span className="text-[10px] text-slate-400 font-mono">Campaign Command</span>
-                    </div>
-                    <p className="text-xs text-slate-300 font-light">글로벌 마케팅 기획 | 인플루언서 제휴 모델링 | 물류 총괄 원격 동기화</p>
-                  </div>
-
-                  {/* Dual Tracks Branch */}
-                  <div className="grid grid-cols-2 gap-4 text-left">
-                    <div className="p-3.5 rounded-xl bg-[#c5a880]/10 border border-[#c5a880]/20 relative">
-                      <span className="text-[10px] text-[#c5a880] font-mono block mb-1">TRACK 1: USA</span>
-                      <h5 className="text-xs font-bold text-white mb-1">Amazon & TikTok</h5>
-                      <span className="text-[10px] text-emerald-400 font-bold block bg-emerald-500/10 py-0.5 px-1.5 rounded w-max text-center">Fast Cash flow</span>
-                    </div>
-                    <div className="p-3.5 rounded-xl bg-[#e07a5f]/10 border border-[#e07a5f]/20 relative">
-                      <span className="text-[10px] text-[#e07a5f] font-mono block mb-1">TRACK 2: INDIA</span>
-                      <h5 className="text-xs font-bold text-white mb-1">FTWZ & CDSCO</h5>
-                      <span className="text-[10px] text-amber-300 font-bold block bg-amber-500/10 py-0.5 px-1.5 rounded w-max text-center">Future Value</span>
-                    </div>
-                  </div>
-
-                  <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 text-xs text-slate-400 text-center leading-relaxed">
-                    🌟 <strong className="text-slate-100">FTWZ 장점:</strong> 인도 보세 창고에 무관세로 재고 입고 후 최적량만 분할 출고하여 세금 납부 장기 연기 가능!
-                  </div>
-
-                </div>
-              </motion.div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* PROBLEM & SOLUTION SECTION */}
-      <section className="py-24 bg-white relative" id="problems">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-            <span className="text-xs font-bold tracking-widest text-[#b54624] bg-orange-50 px-3.5 py-1.5 rounded-full uppercase">Difficulties in Global Scaling</span>
-            <h2 className="text-3xl sm:text-4xl font-display font-black text-slate-900 tracking-tight break-keep">
-              해외 수출 대행사의 뻔한 언어 장벽,<br className="hidden sm:inline" />
-              <span className="text-brand-600">진짜 병목</span>은 다른 곳에 있습니다.
-            </h2>
-            <p className="text-slate-600 font-light text-base leading-relaxed break-keep">
-              영어 소통이 가능하다고 글로벌 진출이 보증되지 않습니다. 대행사가 절대 해결해 주지 않던 진짜 화장품 수출 수입 장애 요소들을 철저히 분석하여 우회로를 개척해 드립니다.
-            </p>
-          </div>
-
-          {/* Main 2-column layout with problems list on left and beautiful generated visual map on the right */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-            
-            {/* Left side: Problems & Solutions list */}
-            <div className="lg:col-span-12">
-              {/* Desktop version: stacked cards with dynamic sliding/fanning hover effect */}
-              <div className="hidden lg:block relative w-full h-[580px]" onMouseLeave={() => setActiveProblemId(null)}>
-                <div className="absolute inset-x-0 top-[-24px] text-right pr-4 mb-2 pointer-events-none select-none text-[10px] font-mono tracking-widest text-[#cf5c36]/85 flex items-center justify-end gap-1.5 font-bold uppercase">
-                  <Sparkles className="w-3.5 h-3.5 animate-pulse text-rose-500" /> 마우스 커서를 올리면 해결책이 펼쳐집니다
-                </div>
-                {PROBLEMS_AND_SOLUTIONS.map((item) => {
-                  const cardId = item.id;
-                  
-                  // Helper style resolution function
-                  const getStyle = () => {
-                    const baseClass = "absolute left-0 right-0 w-full rounded-3xl border transition-all duration-500 ease-out flex flex-col justify-between overflow-hidden cursor-pointer p-6 sm:p-8 min-h-[390px] h-[390px] shadow-lg hover:shadow-2xl";
-                    
-                    // Default state
-                    if (activeProblemId === null) {
-                      if (cardId === 1) return {
-                        className: `${baseClass} bg-gradient-to-b from-white to-[#faf9f6]/90 border-orange-100/40`,
-                        style: { transform: 'translateY(0px) scale(0.96)', zIndex: 10, opacity: 0.95 }
-                      };
-                      if (cardId === 2) return {
-                        className: `${baseClass} bg-gradient-to-b from-white to-[#faf9f6]/95 border-orange-100/50`,
-                        style: { transform: 'translateY(75px) scale(0.98)', zIndex: 20, opacity: 0.98 }
-                      };
-                      return {
-                        className: `${baseClass} bg-gradient-to-b from-white to-[#faf9f6] border-orange-100/70`,
-                        style: { transform: 'translateY(150px) scale(1)', zIndex: 30, opacity: 1 }
-                      };
-                    }
-                    
-                    // Card 1 is active (hovered)
-                    if (activeProblemId === 1) {
-                      if (cardId === 1) return {
-                        className: `${baseClass} bg-white border-brand-500/30`,
-                        style: { transform: 'translateY(-10px) scale(1.02)', zIndex: 35, opacity: 1 }
-                      };
-                      if (cardId === 2) return {
-                        className: `${baseClass} bg-slate-50 border-slate-200/50`,
-                        style: { transform: 'translateY(410px) scale(0.95)', zIndex: 10, opacity: 0.4 }
-                      };
-                      return {
-                        className: `${baseClass} bg-slate-50 border-slate-200/50`,
-                        style: { transform: 'translateY(475px) scale(0.93)', zIndex: 5, opacity: 0.3 }
-                      };
-                    }
-                    
-                    // Card 2 is active (hovered)
-                    if (activeProblemId === 2) {
-                      if (cardId === 1) return {
-                        className: `${baseClass} bg-slate-50 border-slate-200/50`,
-                        style: { transform: 'translateY(-5px) scale(0.94)', zIndex: 5, opacity: 0.3 }
-                      };
-                      if (cardId === 2) return {
-                        className: `${baseClass} bg-white border-brand-500/30`,
-                        style: { transform: 'translateY(50px) scale(1.02)', zIndex: 35, opacity: 1 }
-                      };
-                      return {
-                        className: `${baseClass} bg-slate-50 border-slate-200/50`,
-                        style: { transform: 'translateY(460px) scale(0.95)', zIndex: 10, opacity: 0.4 }
-                      };
-                    }
-                    
-                    // Card 3 is active (hovered)
-                    if (cardId === 1) return {
-                      className: `${baseClass} bg-slate-50 border-slate-200/50`,
-                      style: { transform: 'translateY(-10px) scale(0.93)', zIndex: 5, opacity: 0.3 }
-                    };
-                    if (cardId === 2) return {
-                      className: `${baseClass} bg-slate-50 border-slate-200/50`,
-                      style: { transform: 'translateY(45px) scale(0.95)', zIndex: 10, opacity: 0.4 }
-                    };
-                    return {
-                      className: `${baseClass} bg-white border-brand-500/30`,
-                      style: { transform: 'translateY(110px) scale(1.02)', zIndex: 35, opacity: 1 }
-                    };
-                  };
-                  
-                  const resolved = getStyle();
-                  
-                  return (
-                    <div
-                      key={item.id}
-                      className={resolved.className}
-                      style={resolved.style}
-                      onMouseEnter={() => setActiveProblemId(cardId)}
-                    >
-                      <div className="grid grid-cols-1 md:grid-cols-2 h-full items-stretch">
-                        
-                        {/* Left split: The Problem */}
-                        <div className="p-4 flex flex-col justify-center space-y-4 pr-6 border-r border-dashed border-slate-100">
-                          <div className="flex items-center gap-2.5">
-                            <span className="w-7 h-7 rounded-lg bg-red-50 text-red-650 flex items-center justify-center font-bold text-xs font-mono border border-red-100">0{item.id}</span>
-                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-450">The Problem</span>
-                          </div>
-                          <div>
-                            <h4 className="font-extrabold text-[#cf5c36] text-base leading-snug mb-2 font-display">
-                              {item.problemTitle}
-                            </h4>
-                            <p className="text-xs leading-relaxed text-slate-500 font-light font-sans">
-                              {item.problemDesc}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Right split: K-Glow Solution */}
-                        <div className="p-4 flex flex-col justify-center space-y-4 pl-6 relative">
-                          <div className="absolute top-4 right-4 text-[#b54624]/20 animate-pulse">
-                            <Sparkles className="w-8 h-8" />
-                          </div>
-                          
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                            <span className="text-[10px] font-black uppercase tracking-widest text-[#cf5c36]">K-Glow Answer</span>
-                          </div>
-                          <div>
-                            <h4 className="font-extrabold text-slate-900 text-base leading-snug mb-2 font-display">
-                              {item.solutionTitle}
-                            </h4>
-                            <p className="text-xs leading-relaxed text-slate-600 font-light font-sans">
-                              {item.solutionDesc}
-                            </p>
-                          </div>
-                        </div>
-
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Mobile/Tablet version: Beautiful intuitive accordion */}
-              <div className="lg:hidden flex flex-col gap-4">
-                {PROBLEMS_AND_SOLUTIONS.map((item) => {
-                  const isOpened = activeProblemId === item.id;
-                  return (
-                    <div 
-                      key={item.id}
-                      className="rounded-2xl border border-orange-100/60 bg-white overflow-hidden shadow-xs hover:shadow-md transition-all duration-300"
-                    >
-                      {/* Accordion Trigger (Problem part) */}
-                      <button
-                        onClick={() => setActiveProblemId(isOpened ? null : item.id)}
-                        className="w-full p-5 sm:p-6 text-left flex items-start gap-4 focus:outline-none focus:ring-0 active:bg-orange-50/25 transition-all duration-200"
-                      >
-                        <span className="w-7 h-7 shrink-0 rounded-lg bg-red-50 text-red-650 flex items-center justify-center font-bold text-xs font-mono border border-red-100 mt-0.5">0{item.id}</span>
-                        <div className="flex-1 space-y-1.5 pr-4">
-                          <div className="flex items-center gap-2">
-                            <span className="text-[9px] font-bold uppercase tracking-widest text-slate-450">The Problem</span>
-                            {!isOpened && (
-                              <span className="text-[9px] font-semibold text-brand-505 font-mono bg-orange-100/30 text-[#b54624] px-1.5 py-0.5 rounded">눌러서 해결책 보기</span>
-                            )}
-                          </div>
-                          <h4 className="font-bold text-sm text-slate-900 leading-snug text-left">
-                            {item.problemTitle}
-                          </h4>
-                          {isOpened && (
-                            <p className="text-[11px] leading-relaxed text-slate-500 font-light mt-2 animate-fade-in text-left">
-                              {item.problemDesc}
-                            </p>
-                          )}
-                        </div>
-                        <div className="shrink-0 mt-2 text-slate-405">
-                          <ChevronDown className={`w-4 h-4 transform transition-transform duration-300 ${isOpened ? 'rotate-180' : 'rotate-0'}`} />
-                        </div>
-                      </button>
-
-                      {/* Accordion Content (Solution Part) */}
-                      {isOpened && (
-                        <div className="p-5 sm:p-6 bg-brand-50/15 border-t border-orange-50/60 text-left space-y-3 animate-fade-in">
-                          <div className="flex items-center gap-1.5">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                            <span className="text-[9px] font-black uppercase tracking-widest text-[#cf5c36]">K-Glow Answer</span>
-                          </div>
-                          <h4 className="font-bold text-sm text-slate-950 leading-snug">
-                            {item.solutionTitle}
-                          </h4>
-                          <p className="text-[11px] leading-relaxed text-slate-600 font-light font-sans">
-                            {item.solutionDesc}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      {/* TRACK STRATEGY SECTION (USA & INDIA) */}
-      <section className="py-24 bg-gradient-to-b from-[#fafaf8] to-white relative overflow-hidden" id="strategy">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-            <span className="text-xs font-bold tracking-widest text-[#b54624] bg-orange-50 px-3.5 py-1.5 rounded-full uppercase">K-Glow 2-Track Portfolio</span>
-            <h2 className="text-3xl sm:text-4xl font-display font-black text-slate-900 tracking-tight break-keep">
-              수익(Cash Flow)과 자산가치를 동시에,<br className="hidden sm:inline" />
-              <span className="text-brand-600">전략적 양방향 타겟 노선</span>
-            </h2>
-            <p className="text-slate-600 font-light text-base leading-relaxed break-keep">
-              속전속결 미국 마켓 플레이스에서의 빠른 정산으로 캐시 카우를 늘리고, 세계 최고 성장 잠재지인 인도 마켓에서 인프라 독점 권위를 굳혀 강력한 미래 성장을 가져갑니다.
-            </p>
-
-            {/* Strategy Select Toggle Buttons */}
-            <div className="inline-flex p-1.5 rounded-xl bg-slate-100 border border-slate-200 mt-6">
-              <button
-                onClick={() => setSelectedTrack('USA')}
-                className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 ${selectedTrack === 'USA' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-600 hover:text-slate-900'}`}
-              >
-                🇺🇸 Track 1 (미국 즉각 캐시플로)
-              </button>
-              <button
-                onClick={() => setSelectedTrack('India')}
-                className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 ${selectedTrack === 'India' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-600 hover:text-slate-900'}`}
-              >
-                🇮🇳 Track 2 (인도 미래 타겟 선점)
-              </button>
-            </div>
-          </div>
-
-          {/* Interactive display of Track details */}
-          <AnimatePresence mode="wait">
-            {SERVICE_CAPABILITIES.filter(item => item.market === selectedTrack).map((capability) => (
-              <motion.div
-                key={capability.id}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.4 }}
-                className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch"
-              >
-                
-                {/* Left card detail context summary */}
-                <div className="lg:col-span-4 bg-slate-950 text-white rounded-3xl p-8 sm:p-10 flex flex-col justify-between relative overflow-hidden shadow-xl border border-slate-800">
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-[#e07a5f]/10 rounded-full blur-3xl p-1" />
-                  
-                  <div className="space-y-5 relative z-10">
-                    <span className="px-3.5 py-1.5 rounded-full bg-white/10 font-mono text-xs font-bold text-slate-100 tracking-wider">
-                      {capability.market === 'USA' ? 'TRACK 1 - CASH FLOW CORE' : 'TRACK 2 - FUTURE GROWTH ASSET'}
-                    </span>
-                    <h3 className="text-2xl sm:text-3xl font-display font-black text-white leading-tight">
-                      {capability.title}
-                    </h3>
-                    <p className="text-xs text-slate-300 leading-relaxed font-light">
-                      {capability.highlight}
-                    </p>
-                  </div>
-
-                  {/* Visual Asset integration depending on Market Track */}
-                  <div className="overflow-hidden rounded-xl border border-white/5 relative aspect-video bg-slate-900 group/track-img my-5">
-                    <img 
-                      src={capability.market === 'USA' ? usaTiktokLivestream : ftwzWarehouseAmbient} 
-                      alt={capability.market === 'USA' ? "TikTok Shop USA Live Stream Visual Asset" : "India FTWZ Warehouse Visual Asset"} 
-                      className="w-full h-full object-cover group-hover/track-img:scale-105 transition-transform duration-700" 
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/10 to-transparent flex flex-col justify-end p-3 text-left">
-                      <p className="text-white text-[10px] font-bold leading-none mb-0.5">
-                        {capability.market === 'USA' ? '미국 틱톡숍 & 인플루언서 제휴 라이브' : '인도 법인 전담 스마트 적재 보세창고'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="pt-5 border-t border-white/10 relative z-10 space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-[#e07a5f]/10 flex items-center justify-center text-[#e07a5f]">
-                        <Globe className="w-5 h-5" />
-                      </div>
-                      <div className="text-left">
-                        <span className="block text-xs text-slate-400">주요 타겟 서비스 채널</span>
-                        <span className="text-sm font-bold text-white">
-                          {capability.market === 'USA' ? 'Amazon US, TikTok Shop Affiliate' : 'Amazon India, Nykaa, Myntra, Tata Cliq'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right grid: Three key benefits details */}
-                <div className="lg:col-span-8 grid grid-cols-1 gap-6">
-                  {capability.benefits.map((benefit, bIdx) => (
-                    <div
-                      key={bIdx}
-                      className="p-6 sm:p-8 rounded-2xl bg-white border border-orange-100/40 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col sm:flex-row justify-between items-start gap-4 hover:border-[#c5a880]/30"
-                    >
-                      <div className="space-y-2 text-left flex-1 max-w-2xl">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="px-2.5 py-0.5 text-[10px] font-bold bg-orange-50 text-[#cf5c36] rounded border border-orange-100">STEP 0{bIdx + 1}</span>
-                          <span className="text-sm font-bold text-slate-900">{benefit.title}</span>
-                        </div>
-                        <p className="text-xs text-slate-500 leading-relaxed font-light">
-                          {benefit.description}
-                        </p>
-                      </div>
-
-                      {benefit.badge && (
-                        <span className="px-3 py-1 bg-[#faf9f6] text-[#b54624] text-xs font-bold rounded-full border border-orange-200/50 shrink-0 select-none">
-                          {benefit.badge}
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-              </motion.div>
-            ))}
-          </AnimatePresence>
-
-          {/* FTWZ LOGISTICS ADVANTAGE HIGHLIGHTER */}
-          <div className="mt-16 pt-16 border-t border-orange-100/40">
-            <div className="bg-slate-900 rounded-3xl p-6 sm:p-10 border border-slate-800 relative overflow-hidden text-left shadow-2xl">
-              
-              {/* Background ambient gold mesh */}
-              <div className="absolute top-0 right-0 w-80 h-80 bg-[#c5a880]/5 rounded-full blur-3xl pointer-events-none" />
-              <div className="absolute bottom-0 left-0 w-80 h-80 bg-brand-500/5 rounded-full blur-3xl pointer-events-none" />
-
-              <div className="relative z-10 space-y-8">
-                
-                {/* Header title */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/10 pb-6">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-[#e07a5f] animate-pulse" />
-                      <span className="text-[10px] uppercase font-bold tracking-wider text-[#c5a880] font-mono">India FTWZ (Free Trade Warehousing Zone) Benefit</span>
-                    </div>
-                    <h3 className="text-xl sm:text-2xl font-display font-black text-white leading-snug">
-                      인도 시장 성공의 승부처: <span className="bg-gradient-to-r from-[#ff825c] to-[#f3bd82] bg-clip-text text-transparent font-black drop-shadow-xs">FTWZ 스마트 물류 혁신</span>
-                    </h3>
-                    <p className="text-xs text-slate-400 font-light max-w-2xl leading-relaxed">
-                      글로벌 브랜드들이 인도 진출 후 80% 이상 좌초되는 주원인은 고율의 화장품 선납 관세(약 38%)와 무자비한 보관 통관 보류 때문입니다. K-Glow는 인도 정부 승인 FTWZ 보세물류 허브를 자체 활용하여 이 리스크를 제로화합니다.
-                    </p>
-                  </div>
-                  <div className="px-4 py-2 bg-white/5 rounded-xl border border-white/10 shrink-0 text-center md:text-right">
-                    <span className="block text-[9px] text-[#c5a880] font-mono font-bold">INDIA TARGET BENEFIT</span>
-                    <span className="text-sm font-black text-white">초기 관세 납부 0% 이월 보장</span>
-                  </div>
-                </div>
-
-                {/* Grid comparing General vs FTWZ */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  
-                  {/* Option A: General customs */}
-                  <div className="p-6 rounded-2xl bg-slate-950/50 border border-slate-800 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center text-xs font-bold">X</div>
-                        <span className="text-xs font-bold text-slate-300">일반 직항 항공/해상 수입 통관</span>
-                      </div>
-                      <span className="text-[10px] text-red-400 font-mono font-bold bg-red-500/15 px-2.5 py-0.5 rounded-full border border-red-500/20">고리스크 유발</span>
-                    </div>
-
-                    <div className="border-t border-white/5 pt-3 space-y-3.5 text-xs text-slate-400">
-                      <div className="flex justify-between items-center">
-                        <span className="font-light text-slate-450">초기 관세 결제 타이밍</span>
-                        <span className="font-bold text-slate-300">화물 인도 항구 도착 즉시 (DAY 1)</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="font-light text-slate-450">인도 화장품 관세율</span>
-                        <span className="font-bold text-slate-300">38.3% (BCD + SWS + IGST) 전액</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="font-light text-slate-450">CDSCO 성분 반려 리스크</span>
-                        <span className="font-bold text-slate-300">물류 전량 압류 및 폐기 또는 반송 처분</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="font-light text-slate-450">아마존 FBA 입점 재입고 주기</span>
-                        <span className="font-bold text-slate-300">인천 재발송시 평균 3~4주 소요</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Option B: K-Glow FTWZ */}
-                  <div className="p-6 rounded-2xl bg-gradient-to-b from-[#1c1d2e] to-[#12131c] border-2 border-[#e07a5f] space-y-4 relative shadow-xl shadow-[#e07a5f]/10">
-                    <div className="absolute top-0 right-10 -translate-y-1/2 px-3 py-1 bg-brand-500 rounded-full text-[10px] font-bold text-white shadow-md animate-bounce">
-                      🔑 독점 혜택 추천
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center text-xs font-black shadow-md shadow-emerald-500/25">O</div>
-                        <span className="text-sm font-bold text-white drop-shadow-md">K-Glow FTWZ 스마트 보세 물류</span>
-                      </div>
-                      <span className="text-[10px] text-emerald-300 font-mono font-bold bg-emerald-500/15 px-2.5 py-1 rounded-full border border-emerald-400/40 shadow-xs">압도적 이점</span>
-                    </div>
-
-                    <div className="border-t border-white/10 pt-3 space-y-3.5 text-xs">
-                      <div className="flex justify-between items-center gap-4">
-                        <span className="font-bold text-slate-100 drop-shadow-sm shrink-0">초기 관세 결제 타이밍</span>
-                        <span className="font-extrabold text-[#f3bd82] border-b border-dashed border-[#f3bd82]/40 pb-0.5 text-right">실 판매 발생 시, 소량 단위 분할 납부</span>
-                      </div>
-                      <div className="flex justify-between items-center gap-4">
-                        <span className="font-bold text-slate-100 drop-shadow-sm shrink-0">검인 검역 보류 상황 대응</span>
-                        <span className="font-extrabold text-[#f3bd82] border-b border-dashed border-[#f3bd82]/40 pb-0.5 text-right">FTWZ 대기 구역서 안전 배분 보존 & 조율</span>
-                      </div>
-                      <div className="flex justify-between items-center gap-4">
-                        <span className="font-bold text-slate-100 drop-shadow-sm shrink-0">아마존 FBA 입점 재입고 주기</span>
-                        <span className="font-extrabold text-[#f3bd82] border-b border-dashed border-[#f3bd82]/40 pb-0.5 text-right">현지 델리 FTWZ서 보급 발송 (2일 이내)</span>
-                      </div>
-                    </div>
-                  </div>
-
-                </div>
-
-                {/* Live Simulation Calculator Slate */}
-                <div className="p-6 sm:p-8 rounded-2xl bg-[#faf9f6]/5 border border-white/5 space-y-6">
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div className="space-y-1">
-                      <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                        <Database className="w-4 h-4 text-brand-500" />
-                        실시간 자본 절약 및 세금 유예 시뮬레이터 (FTWZ Live Calculator)
-                      </h4>
-                      <p className="text-[11px] text-slate-400 font-light">슬라이더를 조절하여 인도 현지 통관 물량 자본 유동성 확보 금액을 가상 산정해 보십시오.</p>
-                    </div>
-                    <div className="px-3.5 py-1.5 bg-brand-500/20 text-[#e07a5f] rounded-lg border border-brand-500/10 text-xs font-mono font-black">
-                      실 물류 관세율: 38% 시뮬레이션 적용
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center border-t border-white/5 pt-6">
-                    
-                    {/* Slider Column */}
-                    <div className="md:col-span-6 space-y-4 text-left">
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="font-medium text-slate-300">인도 수입 예정 화물 원가 총액:</span>
-                        <span className="font-black text-brand-400 text-sm font-mono">${cargoValue.toLocaleString()} USD</span>
-                      </div>
-                      
-                      <div className="relative">
-                        <input
-                          type="range"
-                          min="5000"
-                          max="200000"
-                          step="5000"
-                          value={cargoValue}
-                          onChange={(e) => setCargoValue(parseInt(e.target.value))}
-                          className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-brand-500"
-                        />
-                        <div className="flex justify-between text-[10px] text-slate-500 mt-1 font-mono">
-                          <span>$5,000 (소량테스트)</span>
-                          <span>$100,000 (표준컨테이너)</span>
-                          <span>$200,000 (대형물량)</span>
-                        </div>
-                      </div>
-
-                      <div className="p-3 bg-white/5 rounded-lg text-[11px] text-slate-300 leading-relaxed font-light">
-                        💡 <strong className="text-white">CDSCO 보완 명령 발생 시:</strong> 일반 통관은 전체 통관 보류로 자본이 고사하지만, <span className="text-[#c5a880] font-semibold">K-Glow FTWZ</span> 보존 시 검수 통과분만 단계적으로 부분 수입 출고하여 타 부속 제품의 유통을 즉시 마케팅 실행시킬 수 있습니다.
-                      </div>
-                    </div>
-
-                    {/* Result Card Column */}
-                    <div className="md:col-span-6 grid grid-cols-2 gap-4">
-                      
-                      {/* Cost metrics card 1 */}
-                      <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 text-center space-y-1">
-                        <span className="block text-[10px] text-red-400 font-bold uppercase">일반 통관시 선지출 세금</span>
-                        <span className="block text-lg font-black text-slate-200 font-mono font-bold">
-                          ${Math.round(cargoValue * 0.38).toLocaleString()}
-                        </span>
-                        <p className="text-[9px] text-slate-500 leading-tight">컨테이너 인도 도착 시 즉각 세관 선결제 필요 (자본 락)</p>
-                      </div>
-
-                      {/* Cost metrics card 2 */}
-                      <div className="p-4 rounded-xl bg-gradient-to-br from-[#c5a880]/10 to-brand-500/10 border border-[#c5a880]/30 text-center space-y-1 relative overflow-hidden">
-                        <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping" />
-                        <span className="block text-[10px] text-[#c5a880] font-bold uppercase">K-Glow FTWZ 첫날 지출 관세</span>
-                        <span className="block text-xl font-black text-brand-400 font-mono font-bold animate-pulse text-brand-500">
-                          $0
-                        </span>
-                        <p className="text-[9px] text-[#c5a880] leading-tight">초기 관세 부담 제로! 판매량만큼만 영리하게 주단위 분할 정산</p>
-                      </div>
-
-                      {/* Cash flow leverage advantage box full width */}
-                      <div className="col-span-2 p-3 bg-brand-500/10 rounded-xl border border-brand-500/20 text-center">
-                        <span className="text-xs font-semibold text-white">
-                          🔥 K-Glow 활용 시 추가 확보되는 <span className="text-brand-400 text-sm font-black font-mono">${Math.round(cargoValue * 0.38).toLocaleString()} USD</span> 현금 유동성!
-                        </span>
-                        <p className="text-[10px] text-slate-300 mt-1">이 보존 자금 전액을 미국 브랜드 세션 마켓 마케팅(TikTok/Amazon PPC)에 재투자하여 즉각 캐시를 폭증시킬 수 있습니다.</p>
-                      </div>
-
-                    </div>
-
-                  </div>
-                </div>
-
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      {/* CORE 3-WAY PROCESS SECTION */}
-      <section className="py-24 bg-white relative border-y border-orange-50/50" id="process">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-            <span className="text-xs font-bold tracking-widest text-[#b54624] bg-orange-50 px-3.5 py-1.5 rounded-full uppercase">Step-By-Step Operation Flow</span>
-            <h2 className="text-3xl sm:text-4xl font-display font-black text-slate-900 tracking-tight break-keep">
-              한국 - K-Glow 인도 - K-Glow 한국<br className="hidden sm:inline" />
-              <span className="text-brand-600">유기적 3자 밀착 가속 파이프라인</span>
-            </h2>
-            <p className="text-slate-600 font-light text-base leading-relaxed break-keep">
-              통관, 풀필먼트 및 현지 온라인 판매 채널 활성화를 위한 책임 협력망을 확인해 보세요. 역할 분담이 확실하여 브랜드사에 추가 인력 고용과 물류 실패가 발생하지 않습니다.
-            </p>
-
-            {/* Step navigation selectors */}
-            <div className="grid grid-cols-3 gap-2 p-1 bg-[#faf9f6] rounded-xl border border-orange-100 max-w-xl mx-auto mt-6">
-              {PROCESS_STEPS.map((step) => (
-                <button
-                  key={step.id}
-                  onClick={() => setActiveProcessStep(step.id)}
-                  className={`py-2 px-1 sm:px-3 rounded-lg text-xs font-bold transition-all duration-300 ${activeProcessStep === step.id ? 'bg-brand-500 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
-                >
-                  <span className="block text-[8px] opacity-75 font-mono mb-0.5">{step.stage}</span>
-                  {step.phaseTitle}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Stepped Timeline visual card rendering with animations */}
-          <div className="max-w-4xl mx-auto">
-            <AnimatePresence mode="wait">
-              {PROCESS_STEPS.filter(step => step.id === activeProcessStep).map((step) => (
-                <motion.div
-                  key={step.id}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.4 }}
-                  className="bg-gradient-to-br from-[#111827] to-[#1f2937] text-white rounded-3xl p-8 sm:p-12 shadow-xl border border-slate-800 text-left relative overflow-hidden"
-                >
-                  {/* Watermark identifier */}
-                  <div className="absolute top-4 right-8 font-display font-black text-8xl text-white/[0.03] select-none pointer-events-none uppercase">
-                    {step.stage}
-                  </div>
-
-                  {/* Step Actor Label */}
-                  <div className="flex items-center gap-2 mb-6">
-                    <span className="w-2.5 h-2.5 rounded-full bg-brand-500 animate-ping" />
-                    <span className="px-3 py-1 rounded-full bg-white/10 uppercase font-mono text-xs font-bold tracking-wider text-[#c5a880] border border-white/10">
-                      {step.actorLabel}
-                    </span>
-                  </div>
-
-                  <div className="space-y-6">
-                    <div>
-                      <span className="text-brand-500 text-xs font-bold tracking-widest block uppercase font-mono mb-1">{step.stage} CORE MISSION</span>
-                      <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-white mb-3">
-                        {step.title}
-                      </h3>
-                      <p className="text-slate-300 font-light text-sm leading-relaxed max-w-3xl">
-                        {step.description}
-                      </p>
-                    </div>
-
-                    <div className="border-t border-white/10 pt-6">
-                      <span className="text-xs font-semibold uppercase tracking-wider text-[#c5a880] block mb-4">가속 운영 세부 세션 가이드 (Operation Guideline)</span>
-                      <div className="space-y-3">
-                        {step.details.map((detail, dIdx) => (
-                          <div key={dIdx} className="flex items-start gap-3">
-                            <span className="w-5 h-5 rounded-full bg-brand-500/20 text-[#e07a5f] flex items-center justify-center shrink-0 mt-0.5 text-[10px] font-bold">
-                              {dIdx + 1}
-                            </span>
-                            <span className="text-xs font-normal text-slate-200 leading-relaxed">
-                              {detail}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-8 flex justify-end">
-                    <button
-                      onClick={() => {
-                        if (activeProcessStep < 3) {
-                          setActiveProcessStep(curr => curr + 1);
-                        } else {
-                          setActiveProcessStep(1);
-                        }
-                      }}
-                      className="flex items-center gap-1 text-xs font-bold text-[#c5a880] hover:text-[#e07a5f] transition-colors duration-200"
-                    >
-                      <span>{activeProcessStep === 3 ? "첫 단계로 회전" : "다음 협업 과정 파악"}</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
-
-        </div>
-      </section>
-
-      {/* WHY K-GLOW ADVANTAGES SECTION */}
-      <section className="py-24 bg-[#fafaf8]" id="why">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-            <span className="text-xs font-bold tracking-widest text-[#b54624] bg-orange-50 px-3.5 py-1.5 rounded-full uppercase">Why Choose K-Glow?</span>
-            <h2 className="text-3xl sm:text-4xl font-display font-black text-slate-900 tracking-tight break-keep">
-              글로벌 파트너를 원하십니까,<br className="hidden sm:inline" />
-              <span className="text-brand-600">성장에만 미쳐있는 동반체</span>를 원하십니까?
-            </h2>
-            <p className="text-slate-600 font-light text-base leading-relaxed break-keep">
-              K-Glow는 계약 수수료만 정산하는 단순 에이전트가 아닙니다. 현지에 자기 자본 법인을 박고 직접 허가 면허와 전용 세관 창고 인프라를 마련하여, 원팀으로 동반 가치를 창출합니다.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            
-            {/* Edge Card 1 */}
-            <div className="p-8 rounded-2xl bg-white border border-orange-100/40 shadow-sm space-y-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-left">
-              <div className="w-12 h-12 rounded-xl bg-[#e07a5f]/10 text-brand-500 flex items-center justify-center">
-                <Building className="w-6 h-6" />
-              </div>
-              <div className="space-y-2">
-                <h4 className="font-bold text-lg text-slate-900 leading-snug">현지 법인 보유의<br className="hidden md:inline" /> 독점 안정성</h4>
-                <p className="text-xs text-slate-500 leading-relaxed font-light">
-                  인도 델리 현지에 정식 수입 통관 라이선스를 보유한 K-Glow 독점 자사 법인을 직접 가동합니다. 대리점의 일방 계약 파기나 통관 보류로 인한 재정 리스크가 100% 원친 해수됩니다.
-                </p>
-              </div>
-            </div>
-
-            {/* Edge Card 2 */}
-            <div className="p-8 rounded-2xl bg-white border border-orange-100/40 shadow-sm space-y-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-left">
-              <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
-                <Coins className="w-6 h-6" />
-              </div>
-              <div className="space-y-2">
-                <h4 className="font-bold text-lg text-slate-900 leading-snug">물류 혁신 특권<br className="hidden md:inline" /> (인도 FTWZ 소유)</h4>
-                <p className="text-xs text-slate-500 leading-relaxed font-light">
-                  해외에 화장품이 닿자마자 고율의 세금을 선지급할 필요가 없습니다. K-Glow만의 면세물류 전진보초구인 FTWZ 특혜를 주선하여 주 단위, 판매 실적 단위로 영리하게 부분 수입 통관시킵니다.
-                </p>
-              </div>
-            </div>
-
-            {/* Edge Card 3 */}
-            <div className="p-8 rounded-2xl bg-white border border-orange-100/40 shadow-sm space-y-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-left">
-              <div className="w-12 h-12 rounded-xl bg-[#c5a880]/10 text-luxury-gold flex items-center justify-center">
-                <Award className="w-6 h-6" />
-              </div>
-              <div className="space-y-2">
-                <h4 className="font-bold text-lg text-slate-900 leading-snug">2-Track 완벽한<br className="hidden md:inline" /> 수익 안전 대칭성</h4>
-                <p className="text-xs text-slate-500 leading-relaxed font-light">
-                  회사의 장기 성장을 위해 인도 시장 타겟 선순위를 개설하면서도, 동시 미국 아마존 및 고효율 미국 틱톡 숍 제휴 캠페인을 통하여 단기 운영 자본을 매주 속도감 높게 확보해 드립니다.
-                </p>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Quick interactive testimonial or message panel */}
-          <div className="mt-12 bg-slate-900 text-white rounded-3xl p-6 sm:p-10 relative overflow-hidden text-center border border-slate-800 shadow-xl group max-w-4xl mx-auto">
-            <div className="absolute top-0 right-0 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#c5a880]/5 rounded-full blur-3xl pointer-events-none" />
-            
-            <div className="relative z-10 flex flex-col items-center space-y-6">
-              <div className="space-y-4">
-                <span className="text-[10px] uppercase font-bold tracking-widest text-[#c5a880] block font-mono">Accelerator Direct Voice</span>
-                <p className="text-base font-light text-slate-200 leading-relaxed italic max-w-2xl mx-auto break-keep">
-                  &ldquo;글로벌 이커머스는 단순 샵 개설로 성공을 보장하지 않습니다. 물류 통관 체인에 락이 걸리지 않는 압도적인 인프라 속권, 그리고 기획과 성과 측정에 지독할 정도의 한국적 마인드가 일맥상통해야 비로소 브랜드 가치가 안착됩니다. K-Glow는 그 성공 공식의 유일한 전도사입니다.&rdquo;
-                </p>
-                <span className="block text-xs font-semibold text-slate-400">— K-Glow Korea & India Co-Founders Team</span>
-              </div>
-              
-              <div className="pt-2">
                 <a
-                  href="#contact"
-                  className="inline-block px-10 py-3.5 rounded-xl bg-[#c5a880] text-slate-950 font-bold text-xs hover:bg-[#b54624] hover:text-white transition-colors duration-350 text-center shadow-lg shadow-[#c5a880]/15"
+                  href="#process"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-2.5 text-sm font-semibold px-4 py-2.5 rounded-xl text-slate-700 hover:bg-slate-50"
                 >
-                  1:1 입점 자문 일정 선예약
+                  3자 프로세스
                 </a>
+                <a
+                  href="#why"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-2.5 text-sm font-semibold px-4 py-2.5 rounded-xl text-slate-700 hover:bg-slate-50"
+                >
+                  K-Glow 강점
+                </a>
+                <a
+                  href="#faq"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-2.5 text-sm font-semibold px-4 py-2.5 rounded-xl text-slate-700 hover:bg-slate-50"
+                >
+                  자주 묻는 질문
+                </a>
+                <div className="pt-3 border-t border-slate-100 flex">
+                  <a
+                    href="#contact"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-slate-900 text-white font-bold text-sm"
+                  >
+                    가속 입점 문의
+                  </a>
+                </div>
               </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </header>
+
+      {/* HERO SECTION - Premium Minimal Layout */}
+      <section 
+        className="relative overflow-hidden text-white pt-32 pb-40 bg-no-repeat bg-cover bg-center bg-[#070b13]"
+        style={{ 
+          backgroundImage: `linear-gradient(to bottom, rgba(7, 11, 19, 0.95), rgba(7, 11, 19, 0.85)), url(${heroMapVisual})` 
+        }}
+      >
+        <div className="absolute top-20 left-10 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-[#c5a880]/15 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-10">
+          
+          {/* Badge Pill */}
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-semibold backdrop-blur-sm">
+            <Compass className="w-4 h-4 text-[#e07a5f]" />
+            <span className="text-slate-300 font-medium">Korea & India Entity Hub Operational</span>
+          </div>
+
+          {/* Master Heading */}
+          <div className="space-y-6">
+            <h1 className="font-display font-black text-4xl sm:text-5xl md:text-6xl tracking-tight leading-[1.12] break-keep">
+              K-Beauty 글로벌 진출<br />
+              <span className="bg-gradient-to-r from-[#e07a5f] to-[#c5a880] bg-clip-text text-transparent">
+                미국, 인도 시장 진입을 위한<br />
+                안전하고 빠른 파트너
+              </span>
+            </h1>
+            <p className="text-base sm:text-lg md:text-xl text-slate-300 leading-relaxed font-light font-sans max-w-2xl mx-auto break-keep">
+              한국 본사와 인도 델리 현지 법인을 직접 소유·운영하는 유일한 독점 파트너.<br />
+              현지 지사를 통해 까다로운 CDSCO 인허가 단계를 막힘없이 진행하고<br />
+              미국 유동성 수확까지 연계합니다.
+            </p>
+          </div>
+
+          {/* Call-to-actions */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a
+              href="#contact"
+              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-[#b54624] text-white font-bold text-base hover:bg-[#cf5c36] shadow-lg shadow-[#b54624]/20 transition-all duration-300 transform hover:-translate-y-0.5"
+            >
+              무료 글로벌 진단 신청
+            </a>
+            <a
+              href="#strategy"
+              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white/5 border border-white/15 hover:bg-white/10 text-white font-bold text-base transition-all duration-300"
+            >
+              2-Track 전략 보기
+            </a>
+          </div>
+
+          {/* Pure Key Stats indicators */}
+          <div className="pt-10 border-t border-white/10 grid grid-cols-3 gap-6 max-w-2xl mx-auto text-slate-300">
+            <div className="space-y-1">
+              <span className="block font-display font-extrabold text-2xl sm:text-3xl text-white">100%</span>
+              <span className="text-xs text-slate-400 font-semibold">인도 라이선스 직소유</span>
+            </div>
+            <div className="space-y-1 border-x border-white/10">
+              <span className="block font-display font-extrabold text-2xl sm:text-3xl text-white">0%</span>
+              <span className="text-xs text-slate-400 font-semibold">세관 중단 리스크 무효</span>
+            </div>
+            <div className="space-y-1">
+              <span className="block font-display font-extrabold text-2xl sm:text-3xl text-white">320%+</span>
+              <span className="text-xs text-slate-400 font-semibold">미국 광고 성과 평균</span>
             </div>
           </div>
 
         </div>
       </section>
 
-      {/* FAQ SECTION */}
-      <section className="py-24 bg-white relative" id="faq">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+      {/* PROBLEMS SECTION - 3 Column Clear Bento */}
+      <section className="py-24 bg-white text-left" id="problems">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          <div className="text-center mb-16 space-y-4">
-            <span className="text-xs font-bold tracking-widest text-[#b54624] bg-orange-50 px-3.5 py-1.5 rounded-full uppercase">FAQ HELP DESK</span>
-            <h2 className="text-3xl sm:text-4xl font-display font-black text-slate-900 tracking-tight break-keep">
-              글로벌 확장이 처음인 브랜드를 위한<br className="hidden sm:inline" />
-              <span className="text-brand-600">비즈니스 현실적 팩트 체크</span>
+          <div className="text-center max-w-2xl mx-auto mb-12 space-y-4">
+            <span className="text-xs font-bold tracking-widest text-[#b54624] bg-orange-50 px-3.5 py-1.5 rounded-full uppercase">Troubles in Global Expansion</span>
+            <h2 className="text-3xl sm:text-4xl font-display font-black text-slate-900 tracking-tight leading-snug">
+              수출 대행사의 뻔한 언어 장벽 뒤,<br />
+              진짜 <span className="text-[#b54624]">비즈니스 실무 병목</span>은 이것입니다.
             </h2>
-            <p className="text-slate-500 text-sm font-light max-w-xl mx-auto break-keep">
-              허가가 거절되지는 않을지, 자금이 묶이지는 않을지 등 브랜드가 맞닥뜨릴 현실적인 고충에 즉설으로 가감 없이 안내해 드립니다.
-            </p>
           </div>
 
-          <div className="space-y-4 text-left">
-            {FAQS.map((faq, idx) => {
-              const isOpen = openFaqIndex === idx;
+          <div className="space-y-4">
+            {[
+              {
+                id: "01",
+                label: "인허가 장벽",
+                title: "해외 보완 검역 및 CDSCO의 반려 구렁 속박",
+                desc: "의약품통제국(CDSCO) 성분 검사 보완 지시 즉각 해결이 불가능해, 준비해 둔 대형 글로벌 마케팅 발사 시기가 허무하게 망가지곤 합니다.",
+                solution: "현지 법인 명의 Importer 허가 즉시 동원 패스"
+              },
+              {
+                id: "02",
+                label: "자금 동결",
+                title: "고율의 수입 선납 관세로 인한 자본 유동 고사",
+                desc: "한국에서 출하 즉시 화장품 고율 세금(약 38%)과 창고 세팅 선금을 모두 납부해야 하므로, 지상 판매가 일어나기 전 이미 자금이 묶입니다.",
+                solution: "지정 FTWZ 면세창고 보관 후 소량 분할 부분 통관"
+              },
+              {
+                id: "03",
+                label: "운영 부재",
+                title: "현지 마케터의 미미한 성과와 소통 연계 실패",
+                desc: "해외 매니저는 한국 본사의 뷰티 감각 헤리티지를 담지 못하고, 국내 인력은 현지 광고 오디팅 역량이 없어 허무한 예산 낭비에 가로막힙니다.",
+                solution: "한국 본사 전담 실시간 관리 및 미·인 동시 미디어 광고 집행"
+              }
+            ].map((problem, idx) => {
+              const isOpen = openProblemIndex === idx;
               return (
-                <div
-                  key={idx}
-                  className="rounded-2xl border border-orange-100/40 bg-gradient-to-r from-white to-[#fafaf8] overflow-hidden shadow-sm transition-all duration-200"
+                <div 
+                  key={idx} 
+                  className={`rounded-2xl border transition-all duration-300 ${isOpen ? 'border-[#b54624] bg-white shadow-md' : 'border-slate-200 bg-white hover:border-[#b54624]/30'}`}
                 >
                   <button
-                    onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
-                    className="w-full flex items-center justify-between p-6 text-left hover:bg-orange-50/50 transition-colors duration-200 gap-4"
+                    onClick={() => setOpenProblemIndex(isOpen ? null : idx)}
+                    className="w-full flex items-center justify-between p-6 sm:p-8 text-left transition-colors gap-4"
                   >
-                    <span className="font-bold text-sm sm:text-base text-slate-900 leading-snug">
-                      {faq.question}
-                    </span>
-                    <span className={`w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0 text-slate-600 transition-transform duration-300 ${isOpen ? 'rotate-180 bg-brand-500 text-white' : ''}`}>
-                      <ChevronDown className="w-4 h-4" />
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-extrabold text-red-650 px-2 py-0.5 rounded bg-red-50">제한 {problem.id}</span>
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{problem.label}</span>
+                      </div>
+                      <h3 className="font-extrabold text-slate-900 text-lg sm:text-xl leading-snug">
+                        {problem.title}
+                      </h3>
+                    </div>
+                    <span className={`w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180 bg-[#b54624]/10 text-[#b54624]' : 'text-slate-500'}`}>
+                      <ChevronDown className="w-5 h-5" />
                     </span>
                   </button>
-                  
                   <AnimatePresence initial={false}>
                     {isOpen && (
                       <motion.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.3 }}
+                        transition={{ duration: 0.25, ease: 'easeInOut' }}
                       >
-                        <div className="px-6 pb-6 pt-2 border-t border-slate-100 text-xs sm:text-sm text-slate-600 leading-relaxed font-light">
-                          {faq.answer}
+                        <div className="px-6 pb-6 sm:px-8 sm:pb-8 pt-4 border-t border-slate-100 space-y-4">
+                          <p className="text-sm leading-relaxed text-slate-600 font-light font-sans break-keep">
+                            {problem.desc}
+                          </p>
+                          <div className="p-4 rounded-xl bg-orange-50/50 border border-orange-100/40 text-sm">
+                            <span className="text-[10px] font-extrabold text-[#cf5c36] uppercase block mb-1">K-Glow 해법</span>
+                            <span className="font-bold text-slate-800">{problem.solution}</span>
+                          </div>
                         </div>
                       </motion.div>
                     )}
@@ -1527,44 +390,413 @@ export default function App() {
         </div>
       </section>
 
-      {/* CALL TO ACTION (CTA) & CONTACT FORM SECTION */}
-      <section className="py-24 bg-gradient-to-br from-slate-950 via-[#101725] to-[#1e1411] text-white relative" id="contact">
-        
-        {/* Glow ambient orbs */}
-        <div className="absolute top-1/4 right-10 w-96 h-96 bg-brand-600/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 left-10 w-96 h-96 bg-luxury-gold/5 rounded-full blur-3xl" />
+      {/* STRATEGY & COMPACT CALCULATOR SECTION */}
+      <section className="py-24 bg-[#fafaf8] text-left border-t border-orange-100/30" id="strategy">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          
+          <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
+            <span className="text-xs font-bold tracking-widest text-[#b54624] bg-orange-50 px-3.5 py-1.5 rounded-full uppercase">K-Glow 2-Track Model</span>
+            <h2 className="text-3xl sm:text-4xl font-display font-black text-slate-900 tracking-tight">
+              매월 수익 정산과 세계 인프라 선점,<br />
+              <span className="text-[#b54624]">전략적 양방향 진출</span>
+            </h2>
+          </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-stretch">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-stretch mb-20">
             
-            {/* Copywriter segment */}
-            <div className="lg:col-span-5 flex flex-col justify-between space-y-8">
-              
-              <div className="space-y-6 text-center md:text-left">
-                <span className="text-xs font-bold tracking-widest text-[#e07a5f] bg-brand-500/10 px-3.5 py-1.5 rounded-full uppercase border border-[#e07a5f]/20 font-mono">Ready to Scale?</span>
-                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display font-black leading-tight break-keep">
-                  더 늦기 전에,<br className="hidden sm:inline" />
-                  <span className="bg-gradient-to-r from-[#e07a5f] via-[#c5a880] to-white bg-clip-text text-transparent">
-                    K-Glow의 폭발적 가속력
-                  </span>을<br className="hidden sm:inline" />
-                  장착하십시오.
-                </h2>
-                <p className="text-slate-300 font-light text-sm sm:text-base leading-relaxed max-w-xl break-keep">
-                  인도 14억 초대형 내수 뷰티 시장의 선점주가 될 것인지, 아니면 수개월 수억 원의 통관 수취 실패를 지켜보기만 하는 관망자가 될 것인지. 최고의 2-Track 비즈니스 동맹을 수여받으십시오.
+            {/* Track 1: USA (Left) */}
+            <div className="p-8 sm:p-10 rounded-3xl bg-slate-950 text-white flex flex-col justify-between relative overflow-hidden border border-slate-900">
+              <div className="space-y-6 relative z-10">
+                <span className="px-3.5 py-1 rounded bg-white/15 text-[#e07a5f] font-mono text-xs font-bold uppercase tracking-wider">
+                  Track 1 : 미국 (USA Market)
+                </span>
+                <h3 className="text-2xl font-display font-black text-white leading-tight">
+                  즉각적인 캐시플로(Cash Flow) 수확
+                </h3>
+                <p className="text-xs text-slate-300 leading-relaxed font-light break-keep">
+                  미국 Amazon FBA 정밀 키워드 Editing을 바탕으로 성과 중심의 ROAS 세팅과 함께 미국 숏폼 세일즈 TikTok Shop Affiliate 계약 마케팅을 투입합니다. 매월 안정적인 정산을 바탕으로 한국 브랜드사의 자금흐름을 개선합니다.
                 </p>
-                <p className="text-xs text-slate-400 leading-relaxed font-mono">
-                  *모든 입점 타당성 진단과 1:1 상담은 비공개 준수각서(NDA) 가이드라인 아래 성분을 보호하고 진행됩니다.
+                
+                <div className="overflow-hidden rounded-xl bg-slate-900 aspect-video relative">
+                  <img 
+                    src={usaTiktokLivestream} 
+                    alt="USA Livestream Content" 
+                    className="w-full h-full object-cover opacity-80"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent p-4 flex flex-col justify-end">
+                    <span className="text-[10px] text-emerald-400 font-bold block bg-emerald-500/10 py-1 px-2.5 rounded w-max">미국 TikTok Shop 인플루언서 제휴 캠페인</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-6 mt-6 border-t border-white/10 text-xs text-slate-400">
+                <span className="block text-slate-500 text-[10px] font-bold uppercase tracking-wider">Target Channels</span>
+                <span className="font-bold text-white">Amazon USA (PPC/FBA), TikTok Shop Shop Live</span>
+              </div>
+            </div>
+
+            {/* Track 2: INDIA (Right) */}
+            <div className="p-8 sm:p-10 rounded-3xl bg-slate-950 text-white flex flex-col justify-between relative overflow-hidden border border-slate-900">
+              <div className="space-y-6 relative z-10">
+                <span className="px-3.5 py-1 rounded bg-white/15 text-[#c5a880] font-mono text-xs font-bold uppercase tracking-wider">
+                  Track 2 : 인도 (India Market)
+                </span>
+                <h3 className="text-2xl font-display font-black text-white leading-tight">
+                  세계 최대 14억 오디언스 기반 독점지 선점
+                </h3>
+                <p className="text-xs text-slate-300 leading-relaxed font-light break-keep">
+                  인도 델리 현지의 독점 면세물류 전진보초구(FTWZ) 특혜를 연계하고 자사 수입 라이선스를 이용해 성분 통관 지연 및 검역 지연 리스크를 최소화합니다. 장기적 브랜드 소유가치를 극대화하여 독점 인프라 성장을 가속합니다.
+                </p>
+
+                <div className="overflow-hidden rounded-xl bg-slate-900 aspect-video relative">
+                  <img 
+                    src={ftwzWarehouseAmbient} 
+                    alt="India FTWZ Logistics" 
+                    className="w-full h-full object-cover opacity-80"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent p-4 flex flex-col justify-end">
+                    <span className="text-[10px] text-amber-300 font-bold block bg-amber-500/10 py-1 px-2.5 rounded w-max font-sans">인도 독점 지정 스마트 보세물류기지(FTWZ)</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-6 mt-6 border-t border-white/10 text-xs text-slate-400">
+                <span className="block text-slate-500 text-[10px] font-bold uppercase tracking-wider">Target Channels</span>
+                <span className="font-bold text-white">Amazon India, Nykaa, Myntra, Tata CLiQ</span>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Minimal FTWZ Calculator */}
+          <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-10 border border-slate-800 shadow-xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-[#c5a880]/5 rounded-full blur-3xl pointer-events-none" />
+            
+            <div className="relative z-10 space-y-6">
+              
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/10 pb-5">
+                <div className="text-left space-y-1">
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-[#c5a880] font-mono block">FTWZ (Free Trade Warehousing Zone) Cost Saving</span>
+                  <h4 className="text-xl font-bold font-display text-white">자본 보존 시뮬레이터 (Cost Calculator)</h4>
+                </div>
+                <span className="px-3 py-1 rounded bg-[#b54624] text-white text-xs font-semibold">인도 실 수입 관역율: 38% 자동 산출</span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center pt-2">
+                <div className="md:col-span-7 space-y-4 text-left">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="font-medium text-slate-300">인도 수입 예정 화물 원가 (USD):</span>
+                    <span className="font-black text-brand-400 text-base font-mono text-[#e07a5f]">${cargoValue.toLocaleString()} USD</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="5000"
+                    max="200000"
+                    step="5000"
+                    value={cargoValue}
+                    onChange={(e) => setCargoValue(parseInt(e.target.value))}
+                    className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-[#e07a5f]"
+                  />
+                  <div className="flex justify-between text-[9px] text-slate-500 font-mono">
+                    <span>$5k (최소 테스트)</span>
+                    <span>$100k (중형 매칭 화물)</span>
+                    <span>$200k (대형 물류량)</span>
+                  </div>
+                </div>
+
+                <div className="md:col-span-5 grid grid-cols-2 gap-4">
+                  <div className="bg-slate-950 p-4 rounded-xl border border-white/5 space-y-1 text-center">
+                    <span className="text-[10px] text-slate-400 block font-bold">일반 직항 선납 관세</span>
+                    <span className="text-sm font-black text-slate-300 font-mono">${Math.round(cargoValue * 0.38).toLocaleString()}</span>
+                  </div>
+                  <div className="bg-[#b54624]/10 p-4 rounded-xl border border-[#b54624]/30 space-y-1 text-center">
+                    <span className="text-[10px] text-[#e07a5f] block font-bold">K-Glow 첫날 관세</span>
+                    <span className="text-base font-extrabold text-[#e07a5f] font-mono animate-pulse">$0</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-3 bg-white/5 rounded-xl text-xs text-slate-300 text-center">
+                🔥 K-Glow 활용 시 락(Lock) 없이 즉각 확보되는 <span className="text-[#e07a5f] font-bold font-mono">${Math.round(cargoValue * 0.38).toLocaleString()} USD</span> 보존 자금을 미국 광고 투입에 즉시 재투자할 수 있습니다.
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </section>
+      <section className="py-24 bg-white border-y border-orange-100/20 text-left" id="process">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          
+          <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
+            <span className="text-xs font-bold tracking-widest text-[#b54624] bg-orange-50 px-3.5 py-1.5 rounded-full uppercase">Step-By-Step Operational Timeline</span>
+            <h2 className="text-3xl sm:text-4xl font-display font-black text-slate-900 tracking-tight">
+              한국 - K-Glow 인도 - K-Glow 한국<br />
+              <span className="text-[#b54624]">유기적 3자 밀착 가속</span> 파이프라인
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            {/* Step 1 */}
+            <div className="p-8 rounded-3xl bg-slate-900 text-white relative overflow-hidden flex flex-col justify-between border border-slate-800 shadow-md">
+              <div className="absolute top-4 right-8 font-display font-black text-7xl text-white/[0.02] pointer-events-none select-none">
+                01
+              </div>
+              
+              <div className="space-y-4">
+                <span className="px-2.5 py-0.5 rounded bg-white/10 text-[#e07a5f] text-[10px] font-bold uppercase tracking-widest font-mono">STAGE 01. BRAND</span>
+                <h3 className="text-lg font-bold">인도 FTWZ로 안전 물량 이송</h3>
+                <p className="text-xs text-slate-300 leading-relaxed font-light font-sans break-keep">
+                  국내 브랜드사는 엄격하고 품질 높은 물품을 생산한 뒤, K-Glow 가이드를 마운트하여 인도 지정 면세 자유무역지역(FTWZ)으로 직송 적재합니다.
                 </p>
               </div>
 
-              {/* Direct corporate desk connections */}
+              <div className="pt-4 mt-6 border-t border-white/10 space-y-2 text-xs text-slate-400">
+                <div className="flex gap-2">
+                  <span className="text-xs text-[#e07a5f]">✔</span>
+                  <span>FTWZ 면세 물량 서류 가이던스 일치화</span>
+                </div>
+                <div className="flex gap-2">
+                  <span className="text-xs text-[#e07a5f]">✔</span>
+                  <span>적도 보관 대비 특화 보전 온도 제어 실시간 매시업</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 2 */}
+            <div className="p-8 rounded-3xl bg-slate-900 text-white relative overflow-hidden flex flex-col justify-between border border-slate-800 shadow-md">
+              <div className="absolute top-4 right-8 font-display font-black text-7xl text-white/[0.02] pointer-events-none select-none">
+                02
+              </div>
+              
+              <div className="space-y-4">
+                <span className="px-2.5 py-0.5 rounded bg-white/10 text-[#c5a880] text-[10px] font-bold uppercase tracking-widest font-mono">STAGE 02. INDIA OFFICE</span>
+                <h3 className="text-lg font-bold">인도 법인 명의 통관 및 대행 입고</h3>
+                <p className="text-xs text-slate-300 leading-relaxed font-light font-sans break-keep">
+                  K-Glow 정식 현지 법인 명의로 신속 수입 통관 작업을 처리하여 지정 FBA 창고 혹은 채널 발송을 완벽 관리 이관 완료합니다.
+                </p>
+              </div>
+
+              <div className="pt-4 mt-6 border-t border-white/10 space-y-2 text-xs text-slate-400">
+                <div className="flex gap-2">
+                  <span className="text-xs text-[#c5a880]">✔</span>
+                  <span>현지 법인 수입대행 명의 즉시 대행 승인</span>
+                </div>
+                <div className="flex gap-2">
+                  <span className="text-xs text-[#c5a880]">✔</span>
+                  <span>세분화 판매량 분석 맞춤형 소량 영리한 관역 처리</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 3 */}
+            <div className="p-8 rounded-3xl bg-slate-900 text-white relative overflow-hidden flex flex-col justify-between border border-slate-800 shadow-md">
+              <div className="absolute top-4 right-8 font-display font-black text-7xl text-white/[0.02] pointer-events-none select-none">
+                03
+              </div>
+              
+              <div className="space-y-4">
+                <span className="px-2.5 py-0.5 rounded bg-white/10 text-[#e07a5f] text-[10px] font-bold uppercase tracking-widest font-mono">STAGE 03. KOREA HQ</span>
+                <h3 className="text-lg font-bold">글로벌 채널 마케팅 런칭 스케일</h3>
+                <p className="text-xs text-slate-300 leading-relaxed font-light font-sans break-keep">
+                  한국의 숙련된 뷰티 그로스 대행팀이 미국 키워드 최적화(SEO)와 크리에이티브 퍼포먼스 마케팅, 1:1 고객 불만 CS 응대를 가동합니다.
+                </p>
+              </div>
+
+              <div className="pt-4 mt-6 border-t border-white/10 space-y-2 text-xs text-slate-400">
+                <div className="flex gap-2">
+                  <span className="text-xs text-[#e07a5f]">✔</span>
+                  <span>미국 및 인도 로컬 뷰티 크리에이터 제휴 숏폼 부스트</span>
+                </div>
+                <div className="flex gap-2">
+                  <span className="text-xs text-[#e07a5f]">✔</span>
+                  <span>상시 실시간 물류 자본 통합 대시보드 오디팅 연합</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      {/* WHY K-GLOW - 3-Column Scanner Grid & Gateway Modal */}
+      <section className="py-24 bg-[#fafaf8] text-left border-b border-orange-100/20" id="why">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          
+          <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
+            <span className="text-xs font-bold tracking-widest text-[#b54624] bg-orange-50 px-3.5 py-1.5 rounded-full uppercase">Why Choose K-Glow?</span>
+            <h2 className="text-3xl sm:text-4xl font-display font-black text-slate-900 tracking-tight leading-snug">
+              일반 대행 대리점과의 차별화된<br />
+              <span className="text-[#b54624]">K-Glow만의 3대 물적 강점</span>
+            </h2>
+            <p className="text-sm text-slate-550 font-light font-sans max-w-lg mx-auto leading-relaxed break-keep">
+              정보의 백과사전식 나열을 지양하고, 의사결정에 직관적인 3대 차별 요소를 엄선했습니다. 카드를 선택하면 깊은 전략 리포트가 열립니다.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                id: "01",
+                label: "독점 안정성",
+                icon: <Building className="w-6 h-6 text-[#cf5c36]" />,
+                iconBg: "bg-[#e07a5f]/10",
+                title: "현지 법인 직접 보유의 안정성",
+                shortDesc: "인도 델리 현지에 정식 라이선스를 보유한 K-Glow 자사 법인이 브랜드의 CDSCO 수입 승인과 유통 관리 전과정을 법률적 독립하에 안전하게 보호합니다."
+              },
+              {
+                id: "02",
+                label: "물류 혁신",
+                icon: <Coins className="w-6 h-6 text-emerald-600" />,
+                iconBg: "bg-emerald-500/10",
+                title: "인도 지정 FTWZ 물류 특권",
+                shortDesc: "화장품 수입 시 38% 고율 세금을 선납하지 않고, K-Glow 전진 면세 물류 창고에 보존하며 실제 판매 완료된 수량만 소량 분할 부분 통관시킵니다."
+              },
+              {
+                id: "03",
+                label: "수익 안전",
+                icon: <Award className="w-6 h-6 text-amber-600" />,
+                iconBg: "bg-[#c5a880]/10",
+                title: "미국 - 인도 2-Track 자본 대칭성",
+                shortDesc: "미국 아마존 및 틱톡숍의 매월 안정적인 정산금을 바탕으로 단기 유동 자금을 수확하고, 이를 장기인 인도 검역 진출 구역 마케팅에 무락으로 재투입합니다."
+              }
+            ].map((strength, idx) => {
+              return (
+                <div 
+                  key={idx} 
+                  onClick={() => setSelectedStrengthModal(idx)}
+                  className="group relative p-8 rounded-3xl border border-slate-200/80 bg-white hover:border-[#b54624]/40 hover:shadow-lg transition-all duration-300 flex flex-col justify-between cursor-pointer transform hover:-translate-y-1 text-left"
+                >
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${strength.iconBg}`}>
+                        {strength.icon}
+                      </div>
+                      <span className="text-2xl font-black text-slate-150 group-hover:text-[#b54624]/15 transition-colors font-mono">{strength.id}</span>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-extrabold text-[#cf5c36] px-2 py-0.5 rounded bg-orange-50">{strength.label}</span>
+                        <span className="text-[10px] font-bold text-[#b54624] tracking-widest uppercase">Click to Read</span>
+                      </div>
+                      <h3 className="font-extrabold text-slate-900 text-lg sm:text-xl leading-snug group-hover:text-[#b54624] transition-colors">
+                        {strength.title}
+                      </h3>
+                      <p className="text-xs leading-relaxed text-slate-500 font-light font-sans break-keep pt-1">
+                        {strength.shortDesc}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="pt-6 mt-6 border-t border-slate-50 flex items-center justify-between text-xs font-bold text-slate-700 group-hover:text-[#b54624]">
+                    <span>상세 가이드 리포트 분석</span>
+                    <span className="w-6 h-6 rounded-full bg-slate-50 group-hover:bg-[#b54624]/10 flex items-center justify-center transition-colors">
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+
+
+        </div>
+      </section>
+
+      {/* FAQ SECTION - Pruned and Simplified */}
+      <section className="py-24 bg-white text-left" id="faq">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          
+          <div className="text-center mb-16 space-y-3">
+            <span className="text-xs font-bold tracking-widest text-[#b54624] bg-orange-50 px-3.5 py-1.5 rounded-full uppercase">FAQ Help Desk</span>
+            <h2 className="text-3xl sm:text-4xl font-display font-black text-slate-900 tracking-tight">
+              글로벌 확장이 처음인 브랜드를 위한<br />
+              <span className="text-[#b54624]">핵심 팩트 체크</span>
+            </h2>
+          </div>
+
+          <div className="space-y-4">
+            {[
+              {
+                q: "인도 CDSCO 인증 시 성분 보완 명령을 이미 받았는데 가용 해결책이 있을까요?",
+                a: "K-Glow 현지 담당 전문가들이 즉시 반려 사유 데이터를 분석하여 현지 법인 명의의 인허가 수정 보강 처리를 정밀 조작 및 대행합니다. 정식 법제 테두리 안에서 반려 리스크를 원천 해결하고 합법적으로 공식 허가를 통과시킬 수 있도록 최적의 밀착 솔루션을 제공합니다."
+              },
+              {
+                q: "인도 시장 진출 시 최소 물류 화물 규모 제한이 필수로 요구되나요?",
+                a: "초기 파일럿 컨테이너 및 LCL 소량 적재 분할(최소 $5,000 상당)로 가속 시작이 완전 가능합니다. 독자 면세 창고 FTWZ 가용 권익이 적용되므로 화물 규모에 따른 재정 페널티가 전원 0% 생략 보증됩니다."
+              },
+              {
+                q: "미국 마케팅 수행 자금을 인도 세일즈 볼륨과의 자본 분리 장려로 충전하는 루프 방식이 궁금합니다.",
+                a: "Track 1(미국 아마존/틱톡숍)에서 발행된 고마진 매출 채권 정산 정산금을 매월 신속 회수함으로써, 미주 채널 광고 투입비를 안정적으로 조달하고 인도 시장 인허가 자본 통관 대기 루프를 부드럽게 지원하도록 유기적 대칭 설계되어 가동됩니다."
+              }
+            ].map((faq, idx) => {
+              const isOpen = openFaqIndex === idx;
+              return (
+                <div key={idx} className="rounded-2xl border border-orange-100/30 bg-[#fafaf8] overflow-hidden">
+                  <button
+                    onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
+                    className="w-full flex items-center justify-between p-6 text-left hover:bg-orange-50/30 transition-colors gap-4"
+                  >
+                    <span className="font-bold text-slate-900 text-sm sm:text-base">{faq.q}</span>
+                    <span className={`w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0 transition-transform ${isOpen ? 'rotate-180 bg-[#b54624] text-white' : ''}`}>
+                      <ChevronDown className="w-4 h-4" />
+                    </span>
+                  </button>
+                  <AnimatePresence initial={false}>
+                    {isOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                      >
+                        <div className="px-6 pb-6 pt-2 border-t border-slate-150 text-xs sm:text-sm text-slate-600 leading-relaxed font-light">
+                          {faq.a}
+                         </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })}
+          </div>
+
+        </div>
+      </section>
+
+      {/* CTA & CONTACT FORM */}
+      <section className="py-24 bg-gradient-to-br from-slate-950 via-[#101725] to-[#1e1411] text-white relative text-left" id="contact">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+            
+            {/* Context (Left) */}
+            <div className="lg:col-span-5 flex flex-col justify-between space-y-8">
+              <div className="space-y-6">
+                <span className="text-xs font-bold tracking-widest text-[#e07a5f] bg-brand-500/10 px-3.5 py-1.5 rounded-full uppercase border border-[#e07a5f]/20 font-mono">Launch with K-Glow</span>
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display font-black leading-tight break-keep">
+                  더 늦기 전에,<br />
+                  <span className="bg-gradient-to-r from-[#e07a5f] to-[#c5a880] bg-clip-text text-transparent">
+                    K-Glow의 압도적 속도
+                  </span>를 장착하십시오.
+                </h2>
+                <p className="text-slate-300 font-light text-xs sm:text-sm leading-relaxed max-w-xl break-keep">
+                  인도 14억 소비 시장의 영토적 퍼스트 무버가 될 것인가, 시기 장벽에 락(Lock)이 걸린 지연자들에 남을 것인가. 성분 검사 전과정은 철저한 비공개 비즈니스 연맹(NDA)으로 보호 보장됩니다.
+                </p>
+              </div>
+
+              {/* Contacts */}
               <div className="pt-8 border-t border-white/10 space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-[#e07a5f]">
                     <Mail className="w-4 h-4" />
                   </div>
-                  <div className="text-left">
-                    <span className="block text-[10px] text-slate-400 uppercase tracking-widest">Global Desk Hotline Identifier</span>
+                  <div>
+                    <span className="block text-[10px] text-slate-500 uppercase font-mono mb-0.5">Contact E-Mail</span>
                     <span className="text-sm font-semibold text-slate-200">benjamin@kglowofficial.co.kr</span>
                   </div>
                 </div>
@@ -1573,300 +805,335 @@ export default function App() {
                   <div className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-[#c5a880]">
                     <Phone className="w-4 h-4" />
                   </div>
-                  <div className="text-left">
-                    <span className="block text-[10px] text-slate-400 uppercase tracking-widest">Korea Office Direct Dial</span>
-                    <span className="text-sm font-semibold text-slate-200">+82 (0)10-3040-0321</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-slate-400">
-                    <MapPin className="w-4 h-4" />
-                  </div>
-                  <div className="text-left">
-                    <span className="block text-[10px] text-slate-400 uppercase tracking-widest">India Office Location Address</span>
-                    <span className="text-sm font-normal text-slate-300">7F, 703, PALM COURT, PALM COURT, MG ROAD Industrial Estate Gurgaon, Sector 16, Gurugram,Gurugram, Haryana, 122007</span>
+                  <div>
+                    <span className="block text-[10px] text-slate-500 uppercase font-mono mb-0.5">HQ Direct phone</span>
+                    <span className="text-sm font-semibold text-slate-200">+82 10-3040-0321</span>
                   </div>
                 </div>
               </div>
-
             </div>
 
-            {/* Form segment */}
+            {/* Form (Right) */}
             <div className="lg:col-span-7 bg-slate-900/60 p-6 sm:p-10 rounded-3xl border border-white/10 backdrop-blur-sm self-center">
-              
               <AnimatePresence mode="wait">
                 {!formSubmitted ? (
                   <motion.form
-                    key="consultation-form"
+                    key="form"
                     onSubmit={handleInquirySubmit}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="space-y-6 text-left"
+                    className="space-y-5"
                   >
-                    <div className="border-b border-white/10 pb-4 mb-2">
-                      <h4 className="font-bold text-lg text-white">가속 입점 및 비공개 사전 타당성 진단 신청</h4>
-                      <p className="text-xs text-slate-400 mt-1">간단한 세부내역만 보내주셔도 자사 물류/관세 전문진이 24시간 내 분석 피드백을 회신 드립니다.</p>
+                    <div className="border-b border-white/10 pb-4">
+                      <h4 className="font-bold text-lg text-white">가속 입점 및 비공개 사전 타당성 진단</h4>
+                      <p className="text-xs text-slate-400 mt-1">기본 제안 내용 등록 즉시 전문 관세/물류진의 매칭 검사가 무상 수행됩니다.</p>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {/* Company Name */}
                       <div>
                         <label className="block text-xs font-semibold text-slate-300 mb-1.5">회사명 / 법인명 *</label>
                         <input
                           type="text"
-                          name="companyName"
                           value={formData.companyName}
                           onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                          placeholder="예: 주식회사 케이뷰티스타"
-                          className={`w-full bg-[#111827] border rounded-lg px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 ${formErrors.companyName ? 'border-red-500 focus:ring-red-500' : 'border-slate-800 focus:ring-brand-500 focus:border-brand-500'}`}
+                          placeholder="예: 주식회사 케이스타코스"
+                          className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-xs text-white"
                         />
-                        {formErrors.companyName && <span className="text-[10px] text-red-400 font-semibold block mt-1">{formErrors.companyName}</span>}
+                        {formErrors.companyName && <span className="text-[10px] text-red-400 block mt-1">{formErrors.companyName}</span>}
                       </div>
-
-                      {/* Brand Name */}
                       <div>
                         <label className="block text-xs font-semibold text-slate-300 mb-1.5">브랜드명 *</label>
                         <input
                           type="text"
-                          name="brandName"
                           value={formData.brandName}
                           onChange={(e) => setFormData({ ...formData, brandName: e.target.value })}
-                          placeholder="예: GLOWLAB"
-                          className={`w-full bg-[#111827] border rounded-lg px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 ${formErrors.brandName ? 'border-red-500 focus:ring-red-500' : 'border-slate-800 focus:ring-brand-500 focus:border-brand-500'}`}
+                          placeholder="예: GLOWDERM"
+                          className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-xs text-white"
                         />
-                        {formErrors.brandName && <span className="text-[10px] text-red-400 font-semibold block mt-1">{formErrors.brandName}</span>}
+                        {formErrors.brandName && <span className="text-[10px] text-red-400 block mt-1">{formErrors.brandName}</span>}
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {/* Contact Name */}
                       <div>
-                        <label className="block text-xs font-semibold text-slate-300 mb-1.5">신청자명 / 직함 *</label>
+                        <label className="block text-xs font-semibold text-slate-300 mb-1.5">신청 담당자명 *</label>
                         <input
                           type="text"
-                          name="contactName"
                           value={formData.contactName}
                           onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
-                          placeholder="예: 홍길동 팀장"
-                          className={`w-full bg-[#111827] border rounded-lg px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 ${formErrors.contactName ? 'border-red-500 focus:ring-red-500' : 'border-slate-800 focus:ring-brand-500 focus:border-brand-500'}`}
+                          placeholder="예: 최동진 본부장"
+                          className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-xs text-white"
                         />
-                        {formErrors.contactName && <span className="text-[10px] text-red-400 font-semibold block mt-1">{formErrors.contactName}</span>}
+                        {formErrors.contactName && <span className="text-[10px] text-red-400 block mt-1">{formErrors.contactName}</span>}
                       </div>
-
-                      {/* Phone Name */}
                       <div>
-                        <label className="block text-xs font-semibold text-slate-300 mb-1.5">연락처 *</label>
+                        <label className="block text-xs font-semibold text-slate-300 mb-1.5">연락 번호 *</label>
                         <input
                           type="text"
-                          name="phone"
                           value={formData.phone}
                           onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                           placeholder="예: 010-1234-5678"
-                          className={`w-full bg-[#111827] border rounded-lg px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 ${formErrors.phone ? 'border-red-500 focus:ring-red-500' : 'border-slate-800 focus:ring-brand-500 focus:border-brand-500'}`}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-xs text-white"
                         />
-                        {formErrors.phone && <span className="text-[10px] text-red-400 font-semibold block mt-1">{formErrors.phone}</span>}
+                        {formErrors.phone && <span className="text-[10px] text-red-400 block mt-1">{formErrors.phone}</span>}
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {/* Email Location */}
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-300 mb-1.5">이메일 주소 *</label>
-                        <input
-                          type="email"
-                          name="email"
-                          value={formData.email}
-                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                          placeholder="예: partner@company.com"
-                          className={`w-full bg-[#111827] border rounded-lg px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 ${formErrors.email ? 'border-red-500 focus:ring-red-500' : 'border-slate-800 focus:ring-brand-500 focus:border-brand-500'}`}
-                        />
-                        {formErrors.email && <span className="text-[10px] text-red-400 font-semibold block mt-1">{formErrors.email}</span>}
-                      </div>
-
-                      {/* Brand Url */}
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-300 mb-1.5">브랜드 웹사이트 / 쇼핑몰 URL (선택)</label>
-                        <input
-                          type="url"
-                          name="brandUrl"
-                          value={formData.brandUrl}
-                          onChange={(e) => setFormData({ ...formData, brandUrl: e.target.value })}
-                          placeholder="예: https://brandmall.cos"
-                          className="w-full bg-[#111827] border border-slate-800 rounded-lg px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-brand-500"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Target markets checklist selection */}
                     <div>
-                      <label className="block text-xs font-semibold text-slate-300 mb-2">원하시는 가속 타겟 마켓 (중복 가능) *</label>
-                      <div className="flex gap-6">
-                        <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-slate-300">
-                          <input
-                            type="checkbox"
-                            checked={formData.india}
-                            onChange={(e) => setFormData({ ...formData, india: e.target.checked })}
-                            className="w-4 h-4 rounded bg-slate-950 border-slate-700 text-brand-500 focus:ring-brand-500"
-                          />
-                          🇮🇳 인도 시장 선점 (Track 2)
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-slate-300">
-                          <input
-                            type="checkbox"
-                            checked={formData.usa}
-                            onChange={(e) => setFormData({ ...formData, usa: e.target.checked })}
-                            className="w-4 h-4 rounded bg-slate-950 border-slate-700 text-[#c5a880] focus:ring-[#c5a880]"
-                          />
-                          🇺🇸 미국 수익 강화 (Track 1)
-                        </label>
-                      </div>
-                      {formErrors.targetMarkets && <span className="text-[10px] text-red-400 font-semibold block mt-1">{formErrors.targetMarkets}</span>}
+                      <label className="block text-xs font-semibold text-slate-300 mb-1.5">이메일 주소 *</label>
+                      <input
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        placeholder="예: contact@yourbrand.cos"
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-xs text-white"
+                      />
+                      {formErrors.email && <span className="text-[10px] text-red-400 block mt-1">{formErrors.email}</span>}
                     </div>
 
-                    {/* Category Selector */}
                     <div>
-                      <label className="block text-xs font-semibold text-slate-300 mb-1.5">대표 뷰티 품목 카테고리 *</label>
-                      <select
-                        value={formData.category}
-                        onChange={(e) => setFormData({ ...formData, category: e.target.value as Inquiry['category'] })}
-                        className="w-full bg-[#111827] border border-slate-800 rounded-lg px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-brand-500"
-                      >
-                        <option value="skincare">스킨케어 (기초화장품, 에센스, 마스크팩 등)</option>
-                        <option value="makeup">선케어 & 베이스 메이크업 (쿠션, 파운데이션 등)</option>
-                        <option value="hairbody">헤어 & 바디 케어 제품군</option>
-                        <option value="other">기타 뷰티 디바이스 및 부자재</option>
-                      </select>
-                    </div>
-
-                    {/* Details input form */}
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-300 mb-1.5">전략적 애로사항 및 통관/마케팅 협업 필요 항목 명기 *</label>
+                      <label className="block text-xs font-semibold text-slate-300 mb-1.5">성분 인허가 애로사항 및 제안 사항 *</label>
                       <textarea
-                        name="message"
                         value={formData.message}
                         onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                        rows={4}
-                        placeholder="예: 현재 국내 CDSCO 검인 절차가 중단되어 피드백이 시급합니다. 무관세 수하창고 FTWZ 활용 시 예상 보장료와 초기 아마존 입점 조율 일정이 조견되는지 확인 부탁드립니다."
-                        className={`w-full bg-[#111827] border rounded-lg p-4 text-xs text-white leading-relaxed focus:outline-none focus:ring-1 ${formErrors.message ? 'border-red-500 focus:ring-red-500' : 'border-slate-800 focus:ring-brand-500 focus:border-brand-500'}`}
+                        rows={3}
+                        placeholder="예: 인도 CDSCO 성분 반려 대응 여부, 무관세 소량 분할 FTWZ 활용 단가 및 아마존 입점 일정이 궁금합니다."
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg p-4 text-xs text-white leading-relaxed"
                       />
-                      {formErrors.message && <span className="text-[10px] text-red-400 font-semibold block mt-1">{formErrors.message}</span>}
+                      {formErrors.message && <span className="text-[10px] text-red-400 block mt-1">{formErrors.message}</span>}
                     </div>
 
-                    {/* Submit Button */}
                     <button
                       type="submit"
-                      className="w-full py-4 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-sm tracking-wide transition-all duration-300 shadow-lg shadow-brand-500/10 hover:shadow-brand-500/25 cursor-pointer text-center"
+                      className="w-full py-3.5 rounded-xl bg-[#b54624] hover:bg-[#cf5c36] text-white font-bold text-sm tracking-wide transition-all shadow-md cursor-pointer text-center"
                     >
-                      K-Glow 가속 솔루션 승인 문의 제출
+                      K-Glow 가속 제안 전송
                     </button>
-
                   </motion.form>
                 ) : (
                   <motion.div
-                    key="success-container"
+                    key="success"
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="py-12 text-center space-y-6"
+                    className="py-12 text-center space-y-4"
                   >
-                    <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto shadow-md">
-                      <Check className="w-8 h-8" />
+                    <div className="w-12 h-12 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mx-auto shadow-sm">
+                      <span className="text-xl font-bold">✔</span>
                     </div>
-
-                    <div className="space-y-2">
-                      <h4 className="text-xl font-bold text-white">가속 협력 문의 신청서 접수 완료!</h4>
-                      <p className="text-xs text-slate-300 leading-relaxed max-w-md mx-auto">
-                        성공적으로 물망에 등재되었습니다. K-Glow 한국 영양 마케팅 데스크 및 인도 델리 지부 통관 매니저가 성분 데이터 검토 후 24시간 내 유선 혹은 제안 이메일로 회신 드리겠습니다.
+                    <div className="space-y-1">
+                      <h4 className="text-lg font-bold text-white">협력 문의 접수 완료</h4>
+                      <p className="text-xs text-slate-300 leading-relaxed max-w-sm mx-auto">
+                        제안서가 성공적으로 보존되었습니다. K-Glow 미주 광고 운영 데스크 및 인도 직영 담당관이 성분 정보 면밀 분석 후 24시간 내 가이드 초안을 회신해 올리겠습니다.
                       </p>
                     </div>
-
-                    <div className="text-xs text-amber-300 font-bold bg-amber-500/10 p-3.5 rounded-lg border border-amber-500/20 max-w-sm mx-auto">
-                      💡 아래 <strong className="underline">원장 실시간 확인</strong> 버튼을 클릭하면 제출된 정보의 가상 검증 원장 처리가 즉각 가능한 관리자 모드로 토글됩니다.
-                    </div>
-
-                    <div className="flex justify-center gap-3">
-                      <button
-                        onClick={resetForm}
-                        className="px-6 py-2.5 bg-slate-800 hover:bg-slate-750 text-xs font-bold rounded-lg border border-slate-700 transition-colors"
-                      >
-                        신규 파트 제안 작성
-                      </button>
-                      <button
-                        onClick={() => {
-                          setIsAdminOpen(true);
-                          // Auto scroll to admin console anchor
-                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }}
-                        className="px-6 py-2.5 bg-[#c5a880] hover:bg-[#b54624] text-[#1e293b] hover:text-white text-xs font-bold rounded-lg transition-all"
-                      >
-                        원장 실시간 확인
-                      </button>
-                    </div>
+                    <button
+                      onClick={resetForm}
+                      className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded-lg transition-colors border border-slate-700"
+                    >
+                      새로운 문의 추가 등록
+                    </button>
                   </motion.div>
                 )}
               </AnimatePresence>
-
             </div>
 
           </div>
         </div>
       </section>
 
-      {/* FOOTER SECTION */}
+      {/* FOOTER */}
       <footer className="bg-slate-950 text-slate-400 py-16 border-t border-white/5 text-left text-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-          
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            
-            {/* Branding segment */}
-            <div className="space-y-4 md:col-span-2">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <span className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center text-white font-bold font-display text-sm">K</span>
-                <span className="font-display font-black text-lg tracking-wider text-white">K-GLOW</span>
-                <span className="px-2 py-0.5 rounded text-[8px] bg-[#c5a880]/10 text-[#c5a880] border border-[#c5a880]/20 font-mono font-bold">ACCELERATOR</span>
+                <span className="w-7 h-7 rounded-lg bg-[#b54624] flex items-center justify-center text-white font-bold text-xs">K</span>
+                <span className="font-display font-black text-base tracking-wider text-white">K-GLOW</span>
               </div>
               <p className="text-xs leading-relaxed text-slate-400 max-w-sm font-light break-keep">
-                K-Glow는 한국 본사와 인도 현지 법인을 직접 동시 가용 운영하여 K-beauty 스타트업 브랜드의 인도 통관, 물류, 마케팅, CS 성장을 전격 보조 지원하고 미주 마케팅 및 운영 대행하는 글로벌 액셀러레이터입니다.
+                본사와 인도 자사 법인을 복합 직접 개입식으로 동시 운영 개성하여, 한국 뷰티 스타트업의 지연 통류 차단과 해외 바이럴 확장을 영리하게 해결합니다.
               </p>
             </div>
 
-            {/* Offices & Locations */}
-            <div className="space-y-3">
-              <span className="text-white font-bold text-xs uppercase tracking-widest block mb-1">Korea Headquarter</span>
-              <p className="font-light text-slate-400 leading-relaxed">
-                경기도 성남시 분당구 황새울로360번길 21, 10층 1005호<br />
-                K-Glow 한국 사옥 커머스 비즈니스 유닛<br />
-                TEL: +82-10-3040-0321 | FAX: +82-2-567-8903
-              </p>
-            </div>
-
-            {/* India Entity */}
-            <div className="space-y-3">
-              <span className="text-white font-bold text-xs uppercase tracking-widest block mb-1">India Corporation (New Delhi)</span>
+            <div className="space-y-2">
+              <span className="text-white font-bold text-xs tracking-wider block">Korea Headquarter</span>
               <p className="font-light text-slate-400 leading-relaxed font-sans">
-                7F, 703, PALM COURT, PALM COURT, MG ROAD Industrial Estate Gurgaon, Sector 16, Gurugram,Gurugram, Haryana, 122007<br />
-                K-Glow India Import Clearance Center<br />
-                E-mail: benjamin@kglowofficial.co.kr
+                경기도 성남시 분당구 황새울로360번길 21, 1005호<br />
+                K-Glow 한국 사옥 글로벌 비즈니스 기획센터<br />
+                TEL: +82-10-3040-0321
               </p>
             </div>
 
+            <div className="space-y-2 font-sans">
+              <span className="text-white font-bold text-xs tracking-wider block">India Coporation (Delhi)</span>
+              <p className="font-light text-slate-400 leading-relaxed">
+                7F, 703, PALM COURT, Gurgaon, Gurugram, haryana, 122007<br />
+                K-Glow India Import & Tax Settlement Bureau<br />
+                Email: benjamin@kglowofficial.co.kr
+              </p>
+            </div>
           </div>
 
           <div className="pt-8 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4 text-slate-500">
-            <p>&copy; {new Date().getFullYear()} K-Glow Global Beauty Accelerator Inc. All rights reserved.</p>
-            
-            <div className="flex gap-6">
+            <p>&copy; {new Date().getFullYear()} K-Glow Global Accelerator. All rights reserved.</p>
+            <div className="flex gap-4">
               <a href="#problems" className="hover:text-slate-300">비즈니스 자문</a>
               <a href="#strategy" className="hover:text-slate-300">이용 약관</a>
-              <a href="#contact" className="hover:text-slate-300">개인정보 보호법률(NDA)</a>
-              <button onClick={() => { setIsAdminOpen(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="text-[#c5a880] hover:underline">시뮬레이터 원장 포털</button>
+              <a href="#contact" className="hover:text-slate-300">비공개 비밀유지 협약(NDA)</a>
             </div>
           </div>
-
         </div>
       </footer>
+
+      {/* STRATEGIC GATEWAY MODAL */}
+      <AnimatePresence>
+        {selectedStrengthModal !== null && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop with elegant blur */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedStrengthModal(null)}
+              className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm"
+            />
+            
+            {/* Modal Dialog container with clean scaling and subtle shadows */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ type: "spring", stiffness: 350, damping: 25 }}
+              className="relative w-full max-w-xl bg-white rounded-3xl overflow-hidden shadow-2xl border border-slate-100 flex flex-col max-h-[85vh] text-slate-800 z-10"
+            >
+              {/* Top Accent Gradient Border */}
+              <div className="h-1.5 w-full bg-gradient-to-r from-[#e07a5f] to-[#c5a880]" />
+
+              <div className="p-6 sm:p-8 flex items-center justify-between border-b border-slate-100 bg-slate-50/50">
+                <div className="space-y-1">
+                  <span className="text-[10px] font-black tracking-widest text-[#cf5c36] uppercase bg-orange-50 px-2 py-0.5 rounded leading-none block w-max">
+                    K-Glow Core Strategy {selectedStrengthModal === 0 ? "01" : selectedStrengthModal === 1 ? "02" : "03"}
+                  </span>
+                  <h3 className="font-extrabold text-slate-900 text-lg sm:text-xl leading-none">
+                    {selectedStrengthModal === 0 
+                      ? "현지 법인 직접 소유의 안정성" 
+                      : selectedStrengthModal === 1 
+                      ? "인도 지정 FTWZ 물류 특권" 
+                      : "미국 - 인도 2-Track 자본 대칭성"}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedStrengthModal(null)}
+                  className="w-10 h-10 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 transition-colors shrink-0"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Scrollable Detailed Content Section */}
+              <div className="p-6 sm:p-8 space-y-6 overflow-y-auto text-sm leading-relaxed text-slate-600 font-light pr-4">
+                {selectedStrengthModal === 0 ? (
+                  <>
+                    <p className="break-keep text-[#b54624] font-semibold text-xs py-1 px-3.5 bg-orange-50/60 rounded-xl">
+                      💡 대리점 위탁 수입이 아닌, CDSCO 라이선스를 당사 법인 명의로 일체 발급 및 안전한 100% 자사 소유권 보장.
+                    </p>
+                    <div className="space-y-4 pt-1">
+                      <div className="space-y-1">
+                        <span className="font-bold text-slate-900 block text-xs tracking-tight">CDSCO 라이선스 법률 분쟁 완벽 예방</span>
+                        <p className="text-xs break-keep text-slate-500 font-normal">
+                          인도 의약품통제국(CDSCO)에서 수입 등록증을 인도 대리점 명의로만 발행해 주기 때문에, 대리점과 계약 변동이나 파기 시 공들인 인허가가 묶여버리는 사태가 흔합니다. K-Glow는 자사 보유 법인 명의로 정식 등록하여 영업 권익을 당당히 지켜드립니다.
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <span className="font-bold text-slate-900 block text-xs tracking-tight">실시간 통관 위기 대처 핫라인</span>
+                        <p className="text-xs break-keep text-slate-500 font-normal">
+                          K-Glow 델리 본사와 한국 본부가 긴밀하게 공조하여 예기치 못한 보완 명세를 실시간으로 대리 조치하여 통관 정체 리스크를 해소합니다.
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                ) : selectedStrengthModal === 1 ? (
+                  <>
+                    <p className="break-keep text-emerald-700 font-semibold text-xs py-1 px-3.5 bg-emerald-50/60 rounded-xl">
+                      💡 수입 통관 시 약 38%의 고율 관세를 미리 지불할 필요 없이, FTWZ 영토에 온도 보관하며 판매분만큼 수시로 부분 입고 통관.
+                    </p>
+                    <div className="space-y-4 pt-1">
+                      <div className="space-y-1">
+                        <span className="font-bold text-slate-900 block text-xs tracking-tight">현금 동결 0%의 자금 보존 루프</span>
+                        <p className="text-xs break-keep text-slate-500 font-normal">
+                          선적 화물이 인도 세관에 닿자마자 고액의 세금을 한 번에 선납해야 하는 일반 수출방식과 달리, K-Glow 지정 FTWZ(Free Trade Warehousing Zone)에 무세 상태로 입고하여 보관합니다.
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <span className="font-bold text-slate-900 block text-xs tracking-tight">정기적 판매 실적에 동조하는 부분 과역</span>
+                        <p className="text-xs break-keep text-slate-500 font-normal">
+                          온라인 및 홈쇼핑 등 인도 메이저 멀티채널에서 실제 주문 매칭된 물량에 비례해 해당 영수량만큼만 수시로 세금을 부분 정산, 세무 통관시키므로 초기 운영자본 소모를 통제합니다.
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p className="break-keep text-[#c5a880] font-semibold text-xs py-1 px-3.5 bg-[#c5a880]/15 rounded-xl">
+                      💡 성장이 완만한 인도 시장 진입기 동안 미국 틱톡숍/아마존의 매월 안정적인 정산 수확으로 가속 유동성 활성화.
+                    </p>
+                    <div className="space-y-4 pt-1">
+                      <div className="space-y-1">
+                        <span className="font-bold text-slate-900 block text-xs tracking-tight">매월 안정적인 미국 캐시플로 루프</span>
+                        <p className="text-xs break-keep text-slate-500 font-normal">
+                          인도의 CDSCO 인허가 대기 및 초기 물가 안착기(보통 수개월 단위 소요) 동안 단번에 정산이 수령되는 미주 Amazon 및 TikTok Shop PPC 제휴를 우선 개설하여 캐시플로를 가동합니다.
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <span className="font-bold text-slate-900 block text-xs tracking-tight">위험 전가 분산과 영토 선점 투자</span>
+                        <p className="text-xs break-keep text-slate-500 font-normal">
+                          미국에서 매월 정산 확보한 잉여 수익 원천을 장기 성장 목표 국가인 인도 시장 내부의 대규모 로컬 인플루언서 제휴 및 타겟 광고에 유동적으로 공급하는 대칭 가속을 연합 수행합니다.
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Direct Action Link */}
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between gap-4 mt-6">
+                  <div className="text-left">
+                    <span className="text-[10px] text-slate-400 font-black block font-sans uppercase">Action Gateway</span>
+                    <span className="font-bold text-xs text-slate-800 break-keep">K-Glow 무료 맞춤 가이드 제안서 받기</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedStrengthModal(null);
+                      // Fill message content programmatically
+                      const strengthName = selectedStrengthModal === 0 
+                        ? "현지 법인 직접 소유의 안정성" 
+                        : selectedStrengthModal === 1 
+                        ? "인도 지정 FTWZ 물류 특권" 
+                        : "미국 - 인도 2-Track 자본 대칭성";
+                      setFormData(prev => ({
+                        ...prev,
+                        message: `K-Glow 3대 강점 중 [${strengthName}] 부분과 관하여 당사 브랜드 입점 사전 타당성 분석 진단을 희망합니다.`
+                      }));
+                      // Smooth scroll
+                      document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="shrink-0 px-4 py-2 rounded-xl bg-slate-900 hover:bg-[#b54624] text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+                  >
+                    진단 링크 이동
+                  </button>
+                </div>
+              </div>
+
+              {/* Bottom footer with light info stats */}
+              <div className="p-4 bg-slate-50 border-t border-slate-100 text-center text-[10px] text-slate-400 font-semibold font-mono">
+                Safe Enterprise Access Secured · CONFIDENTIAL NDA APPARENT
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </div>
   );
