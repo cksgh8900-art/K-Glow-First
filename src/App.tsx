@@ -113,7 +113,7 @@ export default function App() {
       console.log("isSending 정의 안됨");
     }
 
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxs9J4uJca2d8GymyYnAQsh94DOE6q8e9_8emYyRxf-vVQQVrKuXRERuNPKSmP-GaPVlg/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbx93A3zDFBj9jPnDLcuYg30WrPlMcVuP4qqYnmbahJjqSqU3lVXJdaIXvAy5PS3IUpEow/exec';
     
     // 데이터 포맷 정렬
     const googleSheetData = {
