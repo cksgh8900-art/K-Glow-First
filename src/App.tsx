@@ -81,9 +81,11 @@ export default function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleInquirySubmit = (e: React.FormEvent) => {
+  const handleInquirySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errors: Record<string, string> = {};
+    
+    // 1. 유효성 검사 (기존 로직 유지)
     if (!formData.companyName.trim()) errors.companyName = '회사명(법인명)을 입력해 주세요.';
     if (!formData.brandName.trim()) errors.brandName = '브랜드명을 입력해 주세요.';
     if (!formData.contactName.trim()) errors.contactName = '담당자명을 입력해 주세요.';
@@ -101,7 +103,45 @@ export default function App() {
     }
 
     setFormErrors({});
-    setFormSubmitted(true);
+    setIsSending(true); // [추가] 전송 시작 상태 알림
+
+    // 2. [핵심] 구글 앱스 스크립트 연동 로직
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxs9J4uJca2d8GymyYnAQsh94DOE6q8e9_8emYyRxf-vVQQVrKuXRERuNPKSmP-GaPVlg/exec';
+    
+    const targetMarketsArr = [];
+    if (formData.india) targetMarketsArr.push("인도");
+    if (formData.usa) targetMarketsArr.push("미국");
+
+    const googleSheetData = {
+      company: formData.companyName,
+      brand: formData.brandName,
+      applicant: formData.contactName,
+      phone: formData.phone,
+      email: formData.email,
+      website: formData.brandUrl,
+      targetMarkets: targetMarketsArr,
+      category: formData.category,
+      message: formData.message
+    };
+
+    try {
+      // 실제로 구글 서버로 데이터를 보냅니다.
+      await fetch(scriptURL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(googleSheetData)
+      });
+
+      // 전송 성공 시에만 성공 화면으로 전환
+      setFormSubmitted(true);
+      alert('문의가 성공적으로 접수되었습니다!');
+    } catch (error) {
+      console.error('Error!', error);
+      alert('전송 중 오류가 발생했습니다. 다시 시도해 주세요.');
+    } finally {
+      setIsSending(false); // 전송 완료 후 버튼 활성화
+    }
   };
 
   const resetForm = () => {
