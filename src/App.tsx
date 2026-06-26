@@ -42,6 +42,7 @@ export default function App() {
   const [selectedStrengthModal, setSelectedStrengthModal] = useState<number | null>(null);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [formData, setFormData] = useState({
+    const [isSending, setIsSending] = useState(false);
     companyName: '',
     brandName: '',
     brandUrl: '',
@@ -53,6 +54,7 @@ export default function App() {
     india: true,
     usa: true
   });
+  const [isSending, setIsSending] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // Sync scroll positions for section active state
@@ -83,64 +85,65 @@ export default function App() {
 
   const handleInquirySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // [확인용] 버튼이 눌렸는지 즉시 확인
+    console.log("1. 전송 시도 시작");
+
     const errors: Record<string, string> = {};
     
-    // 1. 유효성 검사 (기존 로직 유지)
-    if (!formData.companyName.trim()) errors.companyName = '회사명(법인명)을 입력해 주세요.';
-    if (!formData.brandName.trim()) errors.brandName = '브랜드명을 입력해 주세요.';
-    if (!formData.contactName.trim()) errors.contactName = '담당자명을 입력해 주세요.';
-    if (!formData.email.trim()) {
-      errors.email = '이메일 주소를 입력해 주세요.';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      errors.email = '올바른 이메일 형식이 아닙니다.';
-    }
-    if (!formData.phone.trim()) errors.phone = '연락처를 입력해 주세요.';
-    if (!formData.message.trim()) errors.message = '문의 내용을 구체적으로 기록해 주세요.';
+    // 유효성 검사 (유저님이 보내주신 JSX의 이름들과 100% 일치시킴)
+    if (!formData.companyName?.trim()) errors.companyName = '회사명(법인명)을 입력해 주세요.';
+    if (!formData.brandName?.trim()) errors.brandName = '브랜드명을 입력해 주세요.';
+    if (!formData.contactName?.trim()) errors.contactName = '담당자명을 입력해 주세요.';
+    if (!formData.email?.trim()) errors.email = '이메일 주소를 입력해 주세요.';
+    if (!formData.phone?.trim()) errors.phone = '연락처를 입력해 주세요.';
+    if (!formData.message?.trim()) errors.message = '문의 내용을 입력해 주세요.';
 
     if (Object.keys(errors).length > 0) {
+      // 어디가 안 적혔는지 알려줌
+      alert("비어있는 필수 항목이 있습니다. 빨간색 경고를 확인해주세요.");
       setFormErrors(errors);
       return;
     }
 
-    setFormErrors({});
-    setIsSending(true); // [추가] 전송 시작 상태 알림
+    // 전송 시작
+    try {
+      if (typeof setIsSending === 'function') setIsSending(true);
+    } catch(e) {
+      console.log("isSending 정의 안됨");
+    }
 
-    // 2. [핵심] 구글 앱스 스크립트 연동 로직
     const scriptURL = 'https://script.google.com/macros/s/AKfycbxs9J4uJca2d8GymyYnAQsh94DOE6q8e9_8emYyRxf-vVQQVrKuXRERuNPKSmP-GaPVlg/exec';
     
-    const targetMarketsArr = [];
-    if (formData.india) targetMarketsArr.push("인도");
-    if (formData.usa) targetMarketsArr.push("미국");
-
+    // 데이터 포맷 정렬
     const googleSheetData = {
       company: formData.companyName,
       brand: formData.brandName,
       applicant: formData.contactName,
       phone: formData.phone,
       email: formData.email,
-      website: formData.brandUrl,
-      targetMarkets: targetMarketsArr,
-      category: formData.category,
+      website: formData.brandUrl || '',
+      targetMarkets: (formData.india ? "인도 " : "") + (formData.usa ? "미국" : ""),
+      category: formData.category || 'skincare',
       message: formData.message
     };
 
     try {
-      // 실제로 구글 서버로 데이터를 보냅니다.
-      await fetch(scriptURL, {
+      console.log("2. 구글로 실제 전송 시작...");
+      const response = await fetch(scriptURL, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(googleSheetData)
       });
 
-      // 전송 성공 시에만 성공 화면으로 전환
+      console.log("3. 전송 완료");
       setFormSubmitted(true);
-      alert('문의가 성공적으로 접수되었습니다!');
+      alert('성공적으로 접수되었습니다! 담당자가 확인 후 연락드리겠습니다.');
     } catch (error) {
-      console.error('Error!', error);
-      alert('전송 중 오류가 발생했습니다. 다시 시도해 주세요.');
+      alert('전송 중 기술적 오류가 발생했습니다: ' + error.message);
     } finally {
-      setIsSending(false); // 전송 완료 후 버튼 활성화
+      if (typeof setIsSending === 'function') setIsSending(false);
     }
   };
 
