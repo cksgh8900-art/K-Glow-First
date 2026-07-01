@@ -62,9 +62,7 @@ export default function App() {
   // Google Apps Script Connection States
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [appsScriptUrl, setAppsScriptUrl] = useState(() => {
-    return localStorage.getItem('kglow_apps_script_url') || (import.meta as any).env?.VITE_APPS_SCRIPT_URL || '';
-  });
+ const [appsScriptUrl, setAppsScriptUrl] = useState('https://script.google.com/macros/s/AKfycbzJof_XvVwPnf619dGQkRE3K-AE4Qxugrn7xvYuZuTs9Yx-S5VjVbL7tT8ItLjZT2ljtw/exec');
   const [showIntegrationGuide, setShowIntegrationGuide] = useState(false);
   const [testSentStatus, setTestSentStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
 
